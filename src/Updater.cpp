@@ -240,8 +240,8 @@ CheckThread(void* data)
 	message.SetToFormat("Installing Kigo %s.", version.String());
 	Notify("Updating Kigo", message.String());
 
-	// Replacing the package stops this app, so a shell that outlives it
-	// swaps the packages and starts the new Kigo, hidden.
+	// A shell that outlives Kigo swaps the packages once Kigo has quit,
+	// then starts the new Kigo, hidden.
 	BString script;
 	script.SetToFormat("sleep 1; for old in \"%s\"/kigo-*.hpkg; do "
 		"rm -f \"$old\"; done; mv \"%s\" \"%s\"/ && rm -rf \"%s\"; sleep 3; "
@@ -250,8 +250,14 @@ CheckThread(void* data)
 		folder.String(), packages.String());
 	const char* swap[] = {"/bin/sh", "-c", script.String(), NULL};
 	thread_id team = load_image(3, swap, (const char**)environ);
-	if (team >= 0)
-		resume_thread(team);
+	if (team < 0) {
+		Notify("Can't update Kigo", "Couldn't start the installer.", true);
+		return B_ERROR;
+	}
+	resume_thread(team);
+	// Quit now: a package swap doesn't always stop the running copy, and
+	// the new Kigo must be the one that answers Alt+Space.
+	be_app->PostMessage(B_QUIT_REQUESTED);
 	return B_OK;
 }
 

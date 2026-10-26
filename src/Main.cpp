@@ -33,22 +33,34 @@ public:
 	void ArgvReceived(int32 argc, char** argv) override
 	{
 		bool toggle = false;
+		bool background = false;
+		bool updated = false;
 		for (int32 i = 1; i < argc; i++) {
 			if (strcmp(argv[i], "--background") == 0)
-				fBackground = true;
+				background = true;
 			else if (strcmp(argv[i], "--updated") == 0)
-				fUpdated = true;
+				updated = true;
 			else if (strcmp(argv[i], "--toggle") == 0)
 				toggle = true;
 			else if (strcmp(argv[i], "--help") == 0) {
 				printf("Kigo %s\nusage: Kigo [--background | --toggle]\n", KIGO_VERSION);
-				fBackground = true;
+				background = true;
 				PostMessage(B_QUIT_REQUESTED);
 			}
 		}
+		if (fWindow == NULL) {
+			// The first launch: ReadyToRun acts on these.
+			fBackground = background;
+			fUpdated = updated;
+			return;
+		}
 		// A second launch delivers its arguments to the running copy.
-		if (fWindow != NULL)
-			fWindow->PostMessage(toggle ? kMsgToggle : kMsgShow);
+		if (updated)
+			Updater::AnnounceUpdated();
+		if (toggle)
+			fWindow->PostMessage(kMsgToggle);
+		else if (!background)
+			fWindow->PostMessage(kMsgShow);
 	}
 
 	void ReadyToRun() override
