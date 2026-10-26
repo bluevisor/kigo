@@ -43,8 +43,9 @@ themes too.
 
 ## Install
 
-Download the `.hpkg` for your architecture from the
-[releases](https://github.com/bluevisor/kigo/releases) and copy it into
+Download the `.hpkg` for your system from the
+[releases](https://github.com/bluevisor/kigo/releases) (`arm64`, `x86_64`,
+or `x86_gcc2` for 32-bit Haiku) and copy it into
 `~/config/packages`. Open Kigo once from Deskbar: it installs its Alt+Space
 hotkey (an input_server filter in `~/config/non-packaged/add-ons`) and starts
 itself hidden at every login (a line in `~/config/settings/boot/UserBootscript`).
@@ -66,6 +67,12 @@ make install    # install that package
 
 From a Mac, `haiku/deploy.sh [--install]` copies the tree to a Haiku VM over
 ssh (`HOST`, default `haiku-dbg`), builds it there and starts it.
+`haiku/cross.sh x86_64` and `haiku/cross.sh x86` cross-compile for Intel in
+Haiku's own cross-compiler images
+(`ghcr.io/haiku/cross-compiler:x86_64-r1beta5` / `x86_gcc2h-r1beta5`, gcc 13)
+and package on that Haiku box, since `rc`, `xres` and `package` only run on
+Haiku. 32-bit Haiku gets an `x86_gcc2` package built for its gcc 13 `x86`
+secondary architecture.
 `haiku/mkicon.py` regenerates the vector icon and `haiku/Kigo.rdef`.
 
 The hotkey filter is never overwritten in place: the input_server keeps it
