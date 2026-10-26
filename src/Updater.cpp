@@ -153,6 +153,15 @@ PackagesFolder()
 }
 
 
+static team_id
+Team()
+{
+	thread_info info;
+	get_thread_info(find_thread(NULL), &info);
+	return info.team;
+}
+
+
 static status_t
 CheckThread(void* data)
 {
@@ -241,12 +250,15 @@ CheckThread(void* data)
 	Notify("Updating Kigo", message.String());
 
 	// A shell that outlives Kigo swaps the packages once Kigo has quit,
-	// then starts the new Kigo, hidden.
+	// then starts the new Kigo, hidden. Kigo is asked to quit below; the
+	// kill is the backstop (once in testing the request went unanswered and
+	// the old copy kept running on the new package's files).
 	BString script;
-	script.SetToFormat("sleep 1; for old in \"%s\"/kigo-*.hpkg; do "
-		"rm -f \"$old\"; done; mv \"%s\" \"%s\"/ && rm -rf \"%s\"; sleep 3; "
+	script.SetToFormat("sleep 2; kill %" B_PRId32 " 2>/dev/null; sleep 1; "
+		"for old in \"%s\"/kigo-*.hpkg; do rm -f \"$old\"; done; "
+		"mv \"%s\" \"%s\"/ && rm -rf \"%s\"; sleep 3; "
 		"\"%s/../apps/Kigo\" --background --updated > /dev/null 2>&1 &",
-		packages.String(), package.String(), packages.String(),
+		(int32)Team(), packages.String(), package.String(), packages.String(),
 		folder.String(), packages.String());
 	const char* swap[] = {"/bin/sh", "-c", script.String(), NULL};
 	thread_id team = load_image(3, swap, (const char**)environ);
