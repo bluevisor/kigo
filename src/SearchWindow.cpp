@@ -104,7 +104,7 @@ public:
 		StrokeLine(bounds.LeftBottom(), bounds.RightBottom());
 
 		BFont font(be_plain_font);
-		font.SetSize(roundf(be_plain_font->Size() * 0.92f));
+		font.SetSize(roundf(Theme::Get().fontSize * 0.92f));
 		SetFont(&font);
 		font_height height;
 		font.GetHeight(&height);

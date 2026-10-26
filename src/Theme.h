@@ -7,6 +7,8 @@
 #include <InterfaceDefs.h>
 
 struct Theme {
+	// The system font size, times KIGO_SCALE when that's set.
+	float	fontSize;
 	float	scale;
 	float	width;
 	float	fieldHeight;

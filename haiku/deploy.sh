@@ -12,7 +12,6 @@ cd "$(dirname "$0")/.."
 # The VM clock resets to 1970 on boot; make minds.
 ssh "$HOST" "date -u -s '$(date -u '+%Y-%m-%d %H:%M:%S')'" >/dev/null
 
-python3 -I haiku/mkicon.py >/dev/null
 COPYFILE_DISABLE=1 tar --no-xattrs --exclude ./build --exclude ./dist --exclude ./.git \
 	--exclude ./.haiku-sdk -czf - . \
 	| ssh "$HOST" 'rm -rf ~/src/kigo/src ~/src/kigo/hotkey && mkdir -p ~/src/kigo && tar xzf - -C ~/src/kigo 2>/dev/null'

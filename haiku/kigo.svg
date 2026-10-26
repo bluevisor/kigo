@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="1280" height="1280"
+     viewBox="0 0 1280 1280" role="img" aria-labelledby="title description">
+  <title id="title">Kigo — Golden Ginkgo Leaf</title>
+  <desc id="description">An editable vector drawing of a golden ginkgo leaf in an angled BeOS-inspired perspective, with broad golden folds and a silver beveled edge. Transparent background.</desc>
+  <defs>
+    <!-- One continuous outline controls the face, clipping, and silver extrusion. -->
+    <path id="leaf-outline" d="
+      M 151,1060
+      C 248,1047 321,988 367,907
+      C 415,824 409,736 389,666
+      C 358,558 282,466 188,419
+      C 147,398 103,382 88,354
+      C 71,323 86,282 115,256
+      C 148,226 192,213 222,187
+      C 259,156 291,137 328,149
+      C 348,156 364,149 368,133
+      C 371,117 385,108 405,104
+      C 439,97 471,77 498,71
+      C 528,64 562,68 587,76
+      C 616,83 637,98 659,103
+      C 694,114 736,134 758,170
+      C 791,213 795,250 778,292
+      C 761,338 739,376 730,415
+      C 726,431 718,445 726,451
+      C 737,463 760,429 776,407
+      C 816,352 851,311 895,286
+      C 922,270 945,268 970,280
+      C 994,291 1006,317 1024,335
+      C 1037,349 1028,366 1046,379
+      C 1063,392 1082,394 1102,416
+      C 1132,446 1145,483 1146,519
+      C 1146,540 1144,550 1161,562
+      C 1185,581 1196,596 1199,622
+      C 1202,645 1195,668 1202,691
+      C 1216,728 1220,756 1205,780
+      C 1195,795 1170,803 1165,821
+      C 1156,846 1170,867 1166,897
+      C 1162,936 1130,974 1093,987
+      C 1060,1000 1037,994 1011,979
+      C 985,964 957,930 935,907
+      C 876,850 819,821 756,806
+      C 704,794 659,796 611,805
+      C 532,821 458,862 406,915
+      C 364,961 335,1011 298,1056
+      C 266,1094 237,1117 196,1136
+      C 181,1105 170,1083 151,1060 Z"/>
+    <clipPath id="face-clip"><use xlink:href="#leaf-outline"/></clipPath>
+    <linearGradient id="silver-side" gradientUnits="userSpaceOnUse" x1="80" y1="700" x2="1220" y2="700">
+      <stop offset="0" stop-color="#e6e3d9"/>
+      <stop offset=".10" stop-color="#a49d8e"/>
+      <stop offset=".21" stop-color="#b5b5b2"/>
+      <stop offset=".29" stop-color="#9f7737"/>
+      <stop offset=".43" stop-color="#ad6406"/>
+      <stop offset=".58" stop-color="#b8720d"/>
+      <stop offset=".70" stop-color="#aaa497"/>
+      <stop offset=".83" stop-color="#d3d0c5"/>
+      <stop offset=".92" stop-color="#96948e"/>
+      <stop offset="1" stop-color="#dedbd0"/>
+    </linearGradient>
+    <linearGradient id="gold-face" gradientUnits="userSpaceOnUse" x1="450" y1="80" x2="710" y2="1030">
+      <stop stop-color="#ffed70"/>
+      <stop offset=".33" stop-color="#ffdf3f"/>
+      <stop offset=".68" stop-color="#ffd02b"/>
+      <stop offset="1" stop-color="#f4b719"/>
+    </linearGradient>
+    <linearGradient id="left-fold" gradientUnits="userSpaceOnUse" x1="192" y1="257" x2="519" y2="714">
+      <stop stop-color="#fff17a"/>
+      <stop offset=".34" stop-color="#ffe452"/>
+      <stop offset=".66" stop-color="#ffd036"/>
+      <stop offset=".88" stop-color="#e9a014"/>
+      <stop offset="1" stop-color="#be7407"/>
+    </linearGradient>
+    <linearGradient id="central-fold" gradientUnits="userSpaceOnUse" x1="483" y1="113" x2="515" y2="895">
+      <stop stop-color="#fff27d"/>
+      <stop offset=".34" stop-color="#ffe861"/>
+      <stop offset=".71" stop-color="#ffd43a"/>
+      <stop offset="1" stop-color="#f6b115"/>
+    </linearGradient>
+    <linearGradient id="central-shadow" gradientUnits="userSpaceOnUse" x1="521" y1="416" x2="744" y2="483">
+      <stop stop-color="#ffc727" stop-opacity="0"/>
+      <stop offset=".55" stop-color="#f6af0e" stop-opacity=".55"/>
+      <stop offset=".86" stop-color="#d28a00" stop-opacity=".78"/>
+      <stop offset="1" stop-color="#ffc626" stop-opacity=".15"/>
+    </linearGradient>
+    <linearGradient id="upper-right-fold" gradientUnits="userSpaceOnUse" x1="525" y1="822" x2="979" y2="323">
+      <stop stop-color="#d5940e"/>
+      <stop offset=".38" stop-color="#f2b516"/>
+      <stop offset=".70" stop-color="#ffd027"/>
+      <stop offset="1" stop-color="#ffe962"/>
+    </linearGradient>
+    <linearGradient id="right-ridge" gradientUnits="userSpaceOnUse" x1="724" y1="676" x2="986" y2="721">
+      <stop stop-color="#ffdd42"/>
+      <stop offset=".43" stop-color="#ffe65d"/>
+      <stop offset="1" stop-color="#fff080"/>
+    </linearGradient>
+    <radialGradient id="lower-fan" gradientUnits="userSpaceOnUse" cx="1036" cy="760" r="644" gradientTransform="translate(0 78) scale(1 .9)">
+      <stop stop-color="#ffec6c"/>
+      <stop offset=".33" stop-color="#ffe65b"/>
+      <stop offset=".70" stop-color="#ffd338"/>
+      <stop offset="1" stop-color="#eda811"/>
+    </radialGradient>
+    <linearGradient id="fan-crease" gradientUnits="userSpaceOnUse" x1="818" y1="650" x2="831" y2="695">
+      <stop stop-color="#d99b09" stop-opacity=".55"/>
+      <stop offset=".56" stop-color="#dda00c" stop-opacity=".20"/>
+      <stop offset="1" stop-color="#e6aa14" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="left-sheen" gradientUnits="userSpaceOnUse" cx="210" cy="254" r="289" gradientTransform="translate(0 64) scale(1 .8)">
+      <stop stop-color="#fffbd2" stop-opacity=".40"/>
+      <stop offset="1" stop-color="#fff3a0" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="lower-sheen" gradientUnits="userSpaceOnUse" cx="1005" cy="832" r="249">
+      <stop stop-color="#fff6a1" stop-opacity=".32"/>
+      <stop offset="1" stop-color="#fff6a1" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="stem-gold" gradientUnits="userSpaceOnUse" x1="257" y1="997" x2="304" y2="1036">
+      <stop stop-color="#fff59b"/>
+      <stop offset=".39" stop-color="#ffe36a"/>
+      <stop offset=".74" stop-color="#ffc123"/>
+      <stop offset="1" stop-color="#dda00e"/>
+    </linearGradient>
+    <linearGradient id="stem-cut" gradientUnits="userSpaceOnUse" x1="144" y1="1097" x2="196" y2="1138">
+      <stop stop-color="#e9e7dc"/>
+      <stop offset=".45" stop-color="#c9c7be"/>
+      <stop offset="1" stop-color="#918f86"/>
+    </linearGradient>
+    <linearGradient id="stem-blend" gradientUnits="userSpaceOnUse" x1="0" y1="790" x2="0" y2="1070">
+      <stop stop-color="#fff" stop-opacity="0"/>
+      <stop offset=".47" stop-color="#fff" stop-opacity=".17"/>
+      <stop offset="1" stop-color="#fff"/>
+    </linearGradient>
+    <mask id="stem-blend-mask" maskUnits="userSpaceOnUse" x="120" y="770" width="370" height="400">
+      <path d="M 120,770 H 490 V 1170 H 120 Z" fill="url(#stem-blend)"/>
+    </mask>
+    <linearGradient id="rim-light" gradientUnits="userSpaceOnUse" x1="250" y1="100" x2="1030" y2="1070">
+      <stop stop-color="#fffbe0"/>
+      <stop offset=".48" stop-color="#fff39d"/>
+      <stop offset="1" stop-color="#fff8bd"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Silver edge: a second silhouette offset down, with no bitmap or filter. -->
+  <g id="silver-beveled-edge">
+    <use xlink:href="#leaf-outline" transform="translate(0 31)" fill="url(#silver-side)" stroke="#918675" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M 90,359 C 112,387 154,400 188,419 C 285,470 356,559 389,666
+             C 410,738 415,824 367,907 C 321,988 248,1047 151,1060"
+          transform="translate(0 29)" fill="none" stroke="#e4dcca" stroke-width="1.4" opacity=".66"/>
+    <path d="M 196,1136 C 237,1117 266,1094 298,1056 C 335,1011 364,961 406,915
+             C 458,862 532,821 611,805 C 659,796 704,794 756,806
+             C 819,821 876,850 935,907 C 957,930 985,964 1011,979
+             C 1037,994 1060,1000 1093,987 C 1130,974 1162,936 1166,897"
+          transform="translate(0 30)" fill="none" stroke="#66665e" stroke-width="1.2" opacity=".56"/>
+  </g>
+
+  <g id="golden-leaf-face">
+    <use xlink:href="#leaf-outline" fill="url(#gold-face)" stroke="#bb830e" stroke-width="2" stroke-linejoin="round"/>
+    <g id="broad-leaf-folds" clip-path="url(#face-clip)">
+      <path id="left-lobe" d="M 77,330 L 75,245 L 230,159 L 338,121 L 368,133
+        C 459,221 518,353 521,527 C 525,718 455,847 374,947
+        C 411,818 409,737 389,666 C 358,558 282,466 188,419 C 140,395 92,376 77,330 Z"
+        fill="url(#left-fold)"/>
+      <path id="central-lobe" d="M 368,133 C 422,100 470,73 499,69
+        C 565,54 625,87 670,108 C 686,281 614,579 374,947
+        C 469,788 530,676 521,527 C 518,352 459,221 368,133 Z"
+        fill="url(#central-fold)"/>
+      <path id="central-recess" d="M 670,106 C 739,122 806,196 778,292
+        C 761,338 739,376 730,415 C 726,431 718,445 726,451
+        C 643,538 494,750 374,947 C 612,579 687,280 670,106 Z"
+        fill="url(#central-shadow)"/>
+      <path id="upper-right-lobe" d="M 374,947 C 490,748 636,538 726,451
+        C 752,444 816,340 895,286 C 965,237 1022,302 1046,379
+        C 1107,396 1132,434 1144,478 C 892,575 640,746 374,947 Z"
+        fill="url(#upper-right-fold)"/>
+      <path id="bright-radial-plane" d="M 374,947 C 640,746 892,575 1144,478
+        L 1252,504 L 1252,738 C 1029,567 656,748 374,947 Z"
+        fill="url(#right-ridge)"/>
+      <path id="lower-right-lobe" d="M 374,947 C 655,748 1027,569 1216,697
+        L 1251,1028 L 991,1074 L 744,875 L 521,902 Z"
+        fill="url(#lower-fan)"/>
+      <path id="lower-fold-shadow" d="M 374,947 C 657,745 1023,563 1216,697
+        C 1006,610 672,780 374,947 Z" fill="url(#fan-crease)"/>
+      <ellipse cx="225" cy="270" rx="300" ry="254" fill="url(#left-sheen)"/>
+      <ellipse cx="1005" cy="832" rx="255" ry="250" fill="url(#lower-sheen)"/>
+      <path id="curved-stem" d="M 151,1060 C 248,1047 321,988 367,907
+        C 405,851 430,819 456,786 C 414,872 378,948 332,1009
+        C 295,1060 250,1111 196,1136 C 181,1105 170,1083 151,1060 Z"
+        fill="url(#stem-gold)" mask="url(#stem-blend-mask)"/>
+    </g>
+  </g>
+
+  <g id="stem-end">
+    <path d="M 151,1060 C 169,1065 190,1100 196,1136 L 196,1167
+      C 174,1161 146,1135 142,1111 C 139,1093 142,1074 151,1060 Z"
+      fill="url(#stem-cut)" stroke="#979181" stroke-width="1.5"/>
+    <path d="M 152,1063 C 171,1076 190,1109 195,1136"
+      fill="none" stroke="#fffef1" stroke-width="2.3" opacity=".9"/>
+  </g>
+
+  <g id="fine-bevel-highlights" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <use xlink:href="#leaf-outline" stroke="url(#rim-light)" stroke-width="2.2" opacity=".86"/>
+    <path d="M 89,322 C 87,348 115,362 150,378 C 257,424 338,496 381,594
+      C 432,712 427,823 374,923 C 324,1013 253,1073 188,1097"
+      stroke="#fff4ac" stroke-width="3.2" opacity=".64"/>
+    <path d="M 370,941 C 445,863 524,820 611,805 C 659,796 704,794 756,806
+      C 819,821 876,850 935,907 C 957,930 985,964 1011,979
+      C 1037,994 1060,1000 1093,987 C 1130,974 1162,936 1166,897
+      C 1170,867 1156,846 1165,821 C 1170,803 1195,795 1205,780"
+      stroke="#fff4aa" stroke-width="3.4" opacity=".76"/>
+  </g>
+</svg>

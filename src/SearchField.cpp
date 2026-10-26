@@ -14,7 +14,7 @@ static BFont
 FieldFont()
 {
 	BFont font(be_plain_font);
-	font.SetSize(roundf(be_plain_font->Size() * 1.7f));
+	font.SetSize(roundf(Theme::Get().fontSize * 1.7f));
 	return font;
 }
 

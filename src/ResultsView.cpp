@@ -239,7 +239,7 @@ ResultsView::_DrawHeader(const Line& line)
 {
 	const Theme& theme = Theme::Get();
 	BFont font(be_bold_font);
-	font.SetSize(roundf(be_plain_font->Size() * 0.92f));
+	font.SetSize(roundf(Theme::Get().fontSize * 0.92f));
 	SetFont(&font);
 	font_height height;
 	font.GetHeight(&height);
@@ -309,7 +309,7 @@ ResultsView::_DrawRow(const Line& line)
 
 	// Right-hand kind label or confirmation prompt.
 	BFont small(be_plain_font);
-	small.SetSize(roundf(be_plain_font->Size() * 0.95f));
+	small.SetSize(roundf(Theme::Get().fontSize * 0.95f));
 	const char* label = confirming ? "Press Enter again to confirm"
 		: ResultKindLabel(result.kind);
 	float labelWidth = small.StringWidth(label);
@@ -326,7 +326,7 @@ ResultsView::_DrawRow(const Line& line)
 	// Title, then the subtitle dimmed beside it (Raycast style).
 	float textLeft = iconRect.right + roundf(12 * theme.scale);
 	BFont titleFont(be_plain_font);
-	titleFont.SetSize(roundf(be_plain_font->Size() * 1.08f));
+	titleFont.SetSize(roundf(Theme::Get().fontSize * 1.08f));
 	if (result.kind == kKindCalculator)
 		titleFont.SetFace(B_BOLD_FACE);
 	font_height titleHeight;

@@ -1,6 +1,7 @@
 #include "Theme.h"
 
 #include <math.h>
+#include <stdlib.h>
 
 #include <Font.h>
 
@@ -32,7 +33,13 @@ void
 Theme::Refresh()
 {
 	Theme& t = sTheme;
-	t.scale = be_plain_font->Size() / 12.0f;
+	// KIGO_SCALE enlarges everything, for screenshots.
+	t.fontSize = be_plain_font->Size();
+	if (const char* scale = getenv("KIGO_SCALE")) {
+		if (atof(scale) > 0)
+			t.fontSize *= atof(scale);
+	}
+	t.scale = t.fontSize / 12.0f;
 	t.width = roundf(680 * t.scale);
 	t.fieldHeight = roundf(58 * t.scale);
 	t.rowHeight = roundf(42 * t.scale);
