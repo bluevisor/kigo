@@ -1,0 +1,27 @@
+name			kigo
+version			@VERSION@-@REVISION@
+architecture		@ARCH@
+summary			"A Spotlight and Raycast style launcher for Haiku"
+description		"Kigo is a keyboard launcher for Haiku. Press Alt+Space (Option+Space \
+on a Mac keyboard) and type: it finds applications, preferences and files \
+(through the file system's own index), does arithmetic, opens links, runs \
+shell commands in Terminal and switches workspaces. Results rank by how \
+often and how recently you use them. It updates itself from GitHub releases."
+packager		"John Zheng <bluevisor@gmail.com>"
+vendor			"bluevisor"
+copyrights		"2026 John Zheng"
+licenses		"MIT"
+urls			"https://github.com/bluevisor/kigo"
+
+provides {
+	kigo = @VERSION@-@REVISION@
+	app:Kigo = @VERSION@
+	cmd:kigo = @VERSION@
+}
+
+requires {
+	haiku
+	cmd:curl
+	lib:libgcc_s
+	lib:libstdc++
+}

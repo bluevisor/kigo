@@ -1,0 +1,5 @@
+build/
+dist/
+.haiku-sdk/
+compile_flags.txt
+.DS_Store
