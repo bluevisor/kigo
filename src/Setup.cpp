@@ -146,8 +146,12 @@ InstallAutostart()
 		contents.UnlockBuffer(read > 0 ? read : 0);
 	}
 	file.Unset();
-	if (contents.FindFirst("Kigo --background") >= 0)
+	// The line written below quotes the path, so match `Kigo" --background`
+	// (an unquoted match never hit, and every launch appended another line).
+	if (contents.FindFirst("Kigo\" --background") >= 0
+		|| contents.FindFirst("Kigo --background") >= 0) {
 		return;
+	}
 
 	FILE* out = fopen(script.Path(), "a");
 	if (out == NULL)
