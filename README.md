@@ -50,6 +50,10 @@ or `x86_gcc2` for 32-bit Haiku) and copy it into
 hotkey (an input_server filter in `~/config/non-packaged/add-ons`) and starts
 itself hidden at every login (a line in `~/config/settings/boot/UserBootscript`).
 
+The same filter makes **Win+Space** (⌘+Space on a Mac keyboard) switch input
+methods, as on macOS: Haiku hardcodes that switch to Alt+Space, which Kigo
+takes.
+
 Kigo checks GitHub for a newer release once a day, and on demand with the
 **Check for Updates** command. An update is downloaded, swapped into
 `~/config/packages`, and Kigo restarts itself in the background.

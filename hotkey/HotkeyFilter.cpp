@@ -2,6 +2,11 @@
 // key; Option+Space on a Mac keyboard in UTM) into "toggle Kigo", the way
 // Spotlight and Raycast own a global shortcut.
 //
+// It also turns Cmd+Space on a Mac keyboard (Haiku's Option key) into
+// Alt+Space, which the input_server takes as "next input method" -- it
+// checks for that after the filters run, so the switch stays Mac-like
+// while Kigo keeps Option+Space.
+//
 // Install in ~/config/non-packaged/add-ons/input_server/filters/; the
 // input_server picks up new filters without a restart.
 
@@ -45,6 +50,16 @@ public:
 		}
 
 		int32 modifiers = message->GetInt32("modifiers", 0);
+		if ((modifiers & (kModifierMask & ~B_SHIFT_KEY)) == B_OPTION_KEY) {
+			// Shift+Cmd+Space goes to the previous method, as on the Mac.
+			modifiers &= ~(B_OPTION_KEY | B_LEFT_OPTION_KEY
+				| B_RIGHT_OPTION_KEY);
+			message->ReplaceInt32("modifiers",
+				modifiers | B_COMMAND_KEY | B_LEFT_COMMAND_KEY);
+			message->ReplaceInt8("byte", ' ');
+			message->ReplaceString("bytes", " ");
+			return B_DISPATCH_MESSAGE;
+		}
 		if ((modifiers & kModifierMask) != B_COMMAND_KEY)
 			return B_DISPATCH_MESSAGE;
 
