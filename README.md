@@ -95,6 +95,35 @@ mapped, and rewriting a mapped add-on crashes the input_server (no keyboard or
 mouse until it restarts). Kigo copies a new filter beside the old one and
 renames it over.
 
+## macOS
+
+`mac/` holds a native Mac version: the same ranking, calculator, history and
+settings, as a Swift app with no Dock icon. **Option+Space** opens it (Control
+or Command+Space in Settings), **Option+,** or **Cmd+,** opens its settings.
+It finds applications and System Settings panes, files through Spotlight's
+index of your home folder, commands (Sleep, Lock Screen, Restart, Empty Trash,
+Toggle Dark Mode, common folders), arithmetic, links, `> shell` commands, and
+falls back to a web search.
+
+On the Mac, Cmd+Enter (or Option+Enter) shows the result in Finder,
+Cmd+Shift+C copies its path, Cmd+1 … Cmd+9 open the Nth result. Backspace
+with nothing typed puts the suggestions away; Down brings them back.
+
+    mac/build.sh             # mac/dist/Kigo.app, signed with your Developer ID
+    mac/build.sh --install   # replace /Applications/Kigo.app and start it
+    mac/build.sh --release   # notarized mac/dist/kigo-<version>-macos.zip
+    cd mac && swift test     # matcher, calculator, links, commands
+
+The panel is a rounded, blurred charcoal surface (near white in light mode)
+with a hairline border and a shadow; the gear in the search bar opens
+settings, where you also pick a theme color. Like the Haiku app it updates
+itself from GitHub releases once a day (`kigo-<version>-macos.zip`, checked
+against this copy's Developer ID team before it's swapped in), or from
+**Check for Updates**. It registers itself as a login item once it runs from
+/Applications. For layout checks without Screen Recording permission,
+`KIGO_SNAPSHOT=/tmp/k.png KIGO_QUERY=term .build/debug/Kigo` saves the
+panel, and its settings page, as PNGs (it takes keyboard focus while it runs).
+
 ## License
 
 MIT, see [LICENSE](LICENSE).
