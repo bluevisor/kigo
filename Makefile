@@ -46,6 +46,9 @@ package: all
 install: package
 	-haiku/stop.sh
 	rm -f $(PACKAGES)/kigo-*.hpkg
+	# Let packagefs drop the old one first: a same-named package copied
+	# straight over it stays mounted with the old contents.
+	sleep 2
 	cp $$(ls -t dist/kigo-$(VERSION)-*.hpkg | head -1) $(PACKAGES)/
 	sleep 3
 	/boot/home/config/apps/Kigo --background > /dev/null 2>&1 &

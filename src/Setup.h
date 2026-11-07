@@ -9,6 +9,8 @@
 namespace Setup {
 
 void Run();
+// Adds or removes the UserBootscript line that starts Kigo at login.
+void SetAutostart(bool on);
 
 }
 

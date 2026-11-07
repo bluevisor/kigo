@@ -45,6 +45,7 @@ static const CommandInfo kCommands[] = {
 	{"config", "config", "Folder", "settings folder", kTrackerSignature, false},
 	{"settings-folder", "Settings Folder", "Folder", "config preferences", kTrackerSignature, false},
 	{"new-terminal", "New Terminal Window", "Terminal", "shell console", kTerminalSignature, false},
+	{"settings", "Kigo Settings", "Kigo", "preferences options configure setup", kAppSignature, false},
 	{"reindex", "Reload Applications", "Kigo", "refresh rescan reindex", kAppSignature, false},
 	{"update", "Check for Updates", "Kigo " KIGO_VERSION, "upgrade update version kigo", kAppSignature, false},
 	{"quit", "Quit Kigo", "Kigo", "exit close", kAppSignature, false},
@@ -94,9 +95,11 @@ MakeCommand(const CommandInfo& info)
 
 
 void
-SearchCommands(const char* query, std::vector<Result>& results)
+SearchCommands(const char* query, std::vector<Result>& results, bool all)
 {
 	for (const CommandInfo& info : kCommands) {
+		if (!all && strcmp(info.id, "settings") != 0)
+			continue;
 		float score = FuzzyScore(query, info.title);
 		BString keywords(info.keywords);
 		int32 start = 0;
@@ -118,6 +121,8 @@ SearchCommands(const char* query, std::vector<Result>& results)
 		results.push_back(result);
 	}
 
+	if (!all)
+		return;
 	// "workspace 3", "ws 2": jump to a workspace.
 	int32 count = count_workspaces();
 	for (int32 i = 0; i < count; i++) {
@@ -192,6 +197,8 @@ RunCommand(const Result& result, const BMessenger& app)
 		status_t status = be_roster->Launch(kTerminalSignature);
 		return status == B_OK;
 	}
+	if (strcmp(id, "settings") == 0)
+		return app.SendMessage(kMsgOpenSettings) == B_OK;
 	if (strcmp(id, "reindex") == 0)
 		return app.SendMessage(kMsgReindex) == B_OK;
 	if (strcmp(id, "update") == 0)

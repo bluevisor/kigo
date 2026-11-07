@@ -20,6 +20,7 @@
 #include <StringList.h>
 
 #include "Kigo.h"
+#include "Prefs.h"
 #include "Settings.h"
 
 
@@ -278,6 +279,8 @@ void
 Updater::Check(bool manual)
 {
 	if (!manual) {
+		if (!Prefs::Get().updates)
+			return;
 		time_t now = time(NULL);
 		time_t last = (time_t)atoll(Settings::Get("update_checked").String());
 		// The VM clock can start at 1970; don't record a bogus time.

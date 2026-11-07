@@ -63,6 +63,20 @@ SearchField::FrameResized(float width, float height)
 
 
 void
+SearchField::ThemeChanged()
+{
+	const Theme& theme = Theme::Get();
+	BFont font = FieldFont();
+	SetFontAndColor(0, TextLength(), &font, B_FONT_ALL, &theme.text);
+	SetFontAndColor(&font, B_FONT_ALL, &theme.text);
+	SetViewColor(theme.background);
+	SetLowColor(theme.background);
+	_UpdateTextRect();
+	Invalidate();
+}
+
+
+void
 SearchField::SetPlaceholder(const char* text)
 {
 	fPlaceholder = text;

@@ -3,6 +3,7 @@
 //   Kigo               show the launcher (starting Kigo if needed)
 //   Kigo --background  start hidden; the hotkey shows it (used at boot)
 //   Kigo --toggle      show or hide it
+//   Kigo --settings    show it, grown into the settings page
 //
 // The global hotkey (Alt+Space) comes from the KigoHotkey input_server
 // filter, which sends kMsgToggle here.
@@ -26,7 +27,8 @@ public:
 		BApplication(kAppSignature),
 		fWindow(NULL),
 		fBackground(false),
-		fUpdated(false)
+		fUpdated(false),
+		fSettings(false)
 	{
 	}
 
@@ -35,6 +37,7 @@ public:
 		bool toggle = false;
 		bool background = false;
 		bool updated = false;
+		bool settings = false;
 		for (int32 i = 1; i < argc; i++) {
 			if (strcmp(argv[i], "--background") == 0)
 				background = true;
@@ -42,8 +45,11 @@ public:
 				updated = true;
 			else if (strcmp(argv[i], "--toggle") == 0)
 				toggle = true;
+			else if (strcmp(argv[i], "--settings") == 0)
+				settings = true;
 			else if (strcmp(argv[i], "--help") == 0) {
-				printf("Kigo %s\nusage: Kigo [--background | --toggle]\n", KIGO_VERSION);
+				printf("Kigo %s\nusage: Kigo [--background | --toggle | --settings]\n",
+					KIGO_VERSION);
 				background = true;
 				PostMessage(B_QUIT_REQUESTED);
 			}
@@ -52,6 +58,11 @@ public:
 			// The first launch: ReadyToRun acts on these.
 			fBackground = background;
 			fUpdated = updated;
+			fSettings = settings;
+			return;
+		}
+		if (settings) {
+			fWindow->PostMessage(kMsgOpenSettings);
 			return;
 		}
 		// A second launch delivers its arguments to the running copy.
@@ -74,7 +85,9 @@ public:
 		// Start the window's thread while keeping it hidden.
 		fWindow->Hide();
 		fWindow->Show();
-		if (!fBackground)
+		if (fSettings)
+			fWindow->PostMessage(kMsgOpenSettings);
+		else if (!fBackground)
 			fWindow->PostMessage(kMsgShow);
 	}
 
@@ -84,6 +97,7 @@ public:
 			case kMsgToggle:
 			case kMsgShow:
 			case kMsgReindex:
+			case kMsgOpenSettings:
 				if (fWindow != NULL)
 					fWindow->PostMessage(message);
 				break;
@@ -115,6 +129,7 @@ private:
 	SearchWindow*	fWindow;
 	bool			fBackground;
 	bool			fUpdated;
+	bool			fSettings;
 };
 
 

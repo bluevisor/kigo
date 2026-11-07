@@ -33,6 +33,14 @@ History::History()
 
 
 void
+History::Clear()
+{
+	fItems.clear();
+	Save();
+}
+
+
+void
 History::Load()
 {
 	fItems.clear();

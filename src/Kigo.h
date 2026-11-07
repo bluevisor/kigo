@@ -22,6 +22,11 @@ enum {
 	kMsgFileResults = 'LFil',
 	kMsgReindex = 'LRix',
 	kMsgCheckUpdates = 'LUpd',
+	// The settings page: open it (`Kigo --settings`), one setting changed,
+	// and a frame of the window growing into it or shrinking back.
+	kMsgOpenSettings = 'LSop',
+	kMsgSettingChanged = 'LSet',
+	kMsgMorph = 'LMor',
 };
 
 #endif // KIGO_H
