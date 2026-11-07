@@ -10,7 +10,8 @@ from kigo.calculator import calculate  # noqa: E402
 from kigo.commands import search_commands, url_for  # noqa: E402
 from kigo.fuzzy import fuzzy_score  # noqa: E402
 from kigo.history import History  # noqa: E402
-from kigo.model import Result, build_results  # noqa: E402
+from kigo.model import Result, build_results, section_order  # noqa: E402
+from kigo.files import FileIndex  # noqa: E402
 from kigo.prefs import Prefs  # noqa: E402
 
 
@@ -89,6 +90,26 @@ class CoreTests(unittest.TestCase):
             self.assertEqual([r.kind for r in build_results("2+3", prefs, history, apps, [])][0], "calc")
             history.record("app:Files", "Files")
             self.assertEqual(build_results("fi", prefs, history, apps, [])[0].title, "Files")
+
+    def test_section_order(self):
+        self.assertEqual(section_order([[428], [380], [1000, 900]]), [2, 0, 1])
+        self.assertEqual(section_order([[900], [900], [900]]), [0, 1, 2])
+        self.assertEqual(section_order([[], [650], []]), [1, 0, 2])
+
+    def test_index_reaches_shallow_folders_first(self):
+        import kigo.files as files
+        with tempfile.TemporaryDirectory() as tmp:
+            deep = os.path.join(tmp, "Developer")
+            for i in range(30):
+                os.makedirs(os.path.join(deep, "p%d" % i, "a", "b"))
+            os.makedirs(os.path.join(tmp, "src", "temino"))
+            cap, files.MAX_ENTRIES = files.MAX_ENTRIES, 40
+            try:
+                index = FileIndex(tmp)
+                index._build()
+            finally:
+                files.MAX_ENTRIES = cap
+            self.assertTrue(any(p.endswith("/src/temino") for _, p in index.entries))
 
 
 if __name__ == "__main__":
