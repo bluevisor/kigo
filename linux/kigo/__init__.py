@@ -12,4 +12,4 @@ else:
     VERSION = "0"
 
 # kigo.svg, for the window and menu icon: installed next to the package, or haiku/ in the tree.
-ICON_DIRS = [os.path.join(_here, ".."), os.path.join(_here, "..", "..", "haiku")]
+ICON_DIRS = [os.path.join(_here, ".."), os.path.join(_here, "..", "..", "haiku"), os.path.join(_here, "..", "icons")]

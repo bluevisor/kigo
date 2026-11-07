@@ -19,7 +19,7 @@ fi
 mkdir -p "$share/kigo"
 rm -rf "$app.new"
 mkdir -p "$app.new"
-cp -R "$here/kigo" "$here/kigo.svg" "$here/VERSION" "$app.new/"
+cp -R "$here/kigo" "$here/kigo.svg" "$here/com.bluevisor.kigo.png" "$here/VERSION" "$app.new/"
 rm -rf "$app.old"
 [ -d "$app" ] && mv "$app" "$app.old"
 mv "$app.new" "$app"
@@ -32,20 +32,26 @@ PYTHONPATH="$app\${PYTHONPATH:+:\$PYTHONPATH}" exec python3 -m kigo "\$@"
 WRAPPER
 chmod +x "$HOME/.local/bin/kigo"
 
-mkdir -p "$share/icons/hicolor/scalable/apps" "$share/applications"
-cp "$here/kigo.svg" "$share/icons/hicolor/scalable/apps/kigo.svg"
+# The app icon is Kigo's tile (the same as on the Mac); the bare leaf
+# (kigo.svg) stays inside the app for its own logo.
+icons=$share/icons/hicolor
+mkdir -p "$icons/512x512/apps" "$share/applications"
+cp "$here/com.bluevisor.kigo.png" "$icons/512x512/apps/com.bluevisor.kigo.png"
+rm -f "$icons/scalable/apps/kigo.svg"    # the bare leaf, from 0.1.14
 cat > "$share/applications/com.bluevisor.kigo.desktop" <<DESKTOP
 [Desktop Entry]
 Type=Application
 Name=Kigo
 Comment=Launcher: Alt+Space, type, Enter
 Exec=$HOME/.local/bin/kigo
-Icon=kigo
+Icon=com.bluevisor.kigo
 Categories=Utility;
 Keywords=launcher;search;spotlight;raycast;
 StartupNotify=false
 DESKTOP
-gtk-update-icon-cache -q "$share/icons/hicolor" 2>/dev/null || true
+# A stale icon-theme.cache (another app's) hides new icons; this folder has
+# no index.theme, so rebuild it with -t, or GTK never finds Kigo's icon.
+[ -f "$icons/icon-theme.cache" ] && { gtk-update-icon-cache -q -f -t "$icons" 2>/dev/null || rm -f "$icons/icon-theme.cache"; }
 
 [ "$1" = "--update" ] && exit 0
 # Restart a running copy on the new files, then show it.

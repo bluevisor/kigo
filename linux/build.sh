@@ -10,7 +10,7 @@ VERSION=$(tr -d ' \n' < ../VERSION)
 stage=dist/kigo-$VERSION
 rm -rf dist && mkdir -p "$stage"
 cp -R kigo install.sh "$stage/"
-cp ../haiku/kigo.svg ../LICENSE "$stage/"
+cp ../haiku/kigo.svg ../LICENSE icons/com.bluevisor.kigo.png "$stage/"
 echo "$VERSION" > "$stage/VERSION"
 find "$stage" -name __pycache__ -prune -exec rm -rf {} +
 COPYFILE_DISABLE=1 tar --no-xattrs -czf "dist/kigo-$VERSION-linux.tar.gz" -C dist "kigo-$VERSION"

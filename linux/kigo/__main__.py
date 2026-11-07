@@ -35,7 +35,12 @@ class KigoApp(Gtk.Application):
         for folder in ICON_DIRS:
             if os.path.exists(os.path.join(folder, "kigo.svg")):
                 theme.append_search_path(os.path.abspath(folder))
-        Gtk.Window.set_default_icon_name("kigo")
+        # The leaf (kigo) for Kigo's own logo; the tile (com.bluevisor.kigo)
+        # where the desktop shows the app.
+        for folder in ICON_DIRS:
+            if os.path.exists(os.path.join(folder, setup.APP_ID + ".png")):
+                theme.append_search_path(os.path.abspath(folder))
+        Gtk.Window.set_default_icon_name(setup.APP_ID)
         self.prefs = Prefs()
         self.history = History()
         self.history.load()
@@ -146,7 +151,7 @@ class KigoApp(Gtk.Application):
         setup.apply_autostart(False)
         share = os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share")
         for path in (setup.WRAPPER, os.path.join(share, "applications", setup.APP_ID + ".desktop"),
-                     os.path.join(share, "icons/hicolor/scalable/apps/kigo.svg")):
+                     os.path.join(share, "icons/hicolor/512x512/apps/com.bluevisor.kigo.png")):
             if os.path.exists(path):
                 os.remove(path)
         threading.Thread(target=lambda: os.system("rm -rf '%s'" % os.path.join(share, "kigo", "app")),
