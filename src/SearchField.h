@@ -16,6 +16,8 @@ public:
 	void FrameResized(float width, float height) override;
 
 	void SetPlaceholder(const char* text);
+	// The Size setting or the system font changed.
+	void ThemeChanged();
 
 protected:
 	void InsertText(const char* text, int32 length, int32 offset,

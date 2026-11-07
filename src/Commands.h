@@ -9,8 +9,10 @@
 
 class BMessenger;
 
-// Appends matching built-in commands, scored, to `results`.
-void SearchCommands(const char* query, std::vector<Result>& results);
+// Appends matching built-in commands, scored, to `results`; with `all`
+// false, only Kigo Settings (which must stay findable).
+void SearchCommands(const char* query, std::vector<Result>& results,
+	bool all = true);
 
 // Rebuilds a command result from its id ("cmd:restart") for history.
 bool CommandForId(const char* id, Result& result);

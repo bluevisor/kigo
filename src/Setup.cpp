@@ -13,6 +13,8 @@
 #include <Roster.h>
 #include <String.h>
 
+#include "Prefs.h"
+
 
 static BPath
 AppPath()
@@ -124,6 +126,32 @@ InstallFilter()
 }
 
 
+static BPath
+BootscriptPath()
+{
+	BPath script;
+	if (find_directory(B_USER_SETTINGS_DIRECTORY, &script) != B_OK)
+		return BPath();
+	script.Append("boot/UserBootscript");
+	return script;
+}
+
+
+static BString
+ReadFile(const char* path)
+{
+	BString contents;
+	BFile file(path, B_READ_ONLY);
+	off_t size = 0;
+	if (file.InitCheck() == B_OK && file.GetSize(&size) == B_OK && size > 0) {
+		char* buffer = contents.LockBuffer(size + 1);
+		ssize_t read = file.Read(buffer, size);
+		contents.UnlockBuffer(read > 0 ? read : 0);
+	}
+	return contents;
+}
+
+
 static void
 InstallAutostart()
 {
@@ -132,20 +160,10 @@ InstallAutostart()
 	if (app.FindFirst("/build/") >= 0)
 		return;
 
-	BPath script;
-	if (find_directory(B_USER_SETTINGS_DIRECTORY, &script) != B_OK)
+	BPath script = BootscriptPath();
+	if (script.InitCheck() != B_OK)
 		return;
-	script.Append("boot/UserBootscript");
-
-	BString contents;
-	BFile file(script.Path(), B_READ_ONLY);
-	off_t size = 0;
-	if (file.InitCheck() == B_OK && file.GetSize(&size) == B_OK && size > 0) {
-		char* buffer = contents.LockBuffer(size + 1);
-		ssize_t read = file.Read(buffer, size);
-		contents.UnlockBuffer(read > 0 ? read : 0);
-	}
-	file.Unset();
+	BString contents = ReadFile(script.Path());
 	// The line written below quotes the path, so match `Kigo" --background`
 	// (an unquoted match never hit, and every launch appended another line).
 	if (contents.FindFirst("Kigo\" --background") >= 0
@@ -162,9 +180,66 @@ InstallAutostart()
 }
 
 
+// Takes Kigo's lines (and the comment over them) out of UserBootscript.
+static void
+RemoveAutostart()
+{
+	BPath script = BootscriptPath();
+	if (script.InitCheck() != B_OK)
+		return;
+	BString contents = ReadFile(script.Path());
+	if (contents.IsEmpty())
+		return;
+
+	BString kept;
+	bool changed = false;
+	int32 start = 0;
+	while (start < contents.Length()) {
+		int32 end = contents.FindFirst('\n', start);
+		if (end < 0)
+			end = contents.Length();
+		BString line;
+		contents.CopyInto(line, start, end - start);
+		start = end + 1;
+		if (line.FindFirst("Kigo\" --background") >= 0
+			|| line.FindFirst("Kigo --background") >= 0
+			|| line == "# Kigo launcher (Alt+Space)") {
+			// And the blank line the install put before the comment.
+			if (line.StartsWith("#") && kept.EndsWith("\n\n"))
+				kept.Truncate(kept.Length() - 1);
+			changed = true;
+			continue;
+		}
+		kept << line << '\n';
+	}
+	if (!changed)
+		return;
+
+	BString temp(script.Path());
+	temp << ".new";
+	FILE* out = fopen(temp.String(), "w");
+	if (out == NULL)
+		return;
+	fputs(kept.String(), out);
+	fclose(out);
+	rename(temp.String(), script.Path());
+}
+
+
+void
+Setup::SetAutostart(bool on)
+{
+	if (on)
+		InstallAutostart();
+	else
+		RemoveAutostart();
+}
+
+
 void
 Setup::Run()
 {
 	InstallFilter();
-	InstallAutostart();
+	if (Prefs::Get().autostart)
+		InstallAutostart();
 }

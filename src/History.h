@@ -22,6 +22,8 @@ public:
 	void Save();
 
 	void Record(const char* id, const char* title);
+	// Forgets everything opened, on disk too.
+	void Clear();
 	// Bonus added to a result's match score.
 	float Boost(const char* id) const;
 	// Ids by frecency, best first.

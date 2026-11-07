@@ -37,9 +37,20 @@ typed, Kigo suggests what you use most.
 | Alt+Left / Right            | move by word (Option+arrows on a Mac)     |
 | Option+Left / Right         | to the start / end (Cmd+arrows on a Mac)  |
 | Esc                         | clear the query, then close               |
+| Alt+,                       | settings (Option+, or Cmd+, on a Mac)     |
 
 Kigo follows your Appearance colors and font size, so it works with dark
 themes too.
+
+## Settings
+
+**Alt+,**, the **Kigo Settings** command or `Kigo --settings` grows the
+launcher into its settings page, in the same window; Esc shrinks it back.
+There you pick what Kigo searches (applications, files, commands, the
+calculator), which web search it offers last (DuckDuckGo, Google, Bing or
+none), whether it suggests what you use most, its size, whether it opens at
+login and checks for updates. Up/Down move, Space or Enter changes,
+Left/Right pick a choice. Settings live in `~/config/settings/Kigo/settings`.
 
 ## Install
 

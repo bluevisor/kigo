@@ -5,6 +5,8 @@
 
 #include <Font.h>
 
+#include "Prefs.h"
+
 
 static Theme sTheme;
 static bool sInitialized = false;
@@ -33,8 +35,8 @@ void
 Theme::Refresh()
 {
 	Theme& t = sTheme;
-	// KIGO_SCALE enlarges everything, for screenshots.
-	t.fontSize = be_plain_font->Size();
+	// The Size setting, and KIGO_SCALE on top of it for screenshots.
+	t.fontSize = be_plain_font->Size() * Prefs::Get().SizeScale();
 	if (const char* scale = getenv("KIGO_SCALE")) {
 		if (atof(scale) > 0)
 			t.fontSize *= atof(scale);
