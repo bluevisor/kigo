@@ -34,11 +34,25 @@ def toggle_command():
             "--method org.gtk.Actions.Activate toggle [] {} >/dev/null 2>&1 || \"%s\"'" % (APP_ID, WRAPPER))
 
 
+def x11():
+    return bool(os.environ.get("DISPLAY")) and not os.environ.get("WAYLAND_DISPLAY")
+
+
 def apply_shortcut(index):
-    """Binds the chosen shortcut to Kigo in GNOME; False on other desktops."""
+    """Binds the chosen shortcut to Kigo in GNOME; False on other desktops.
+
+    On X11 Kigo grabs the key itself (hotkey.py) and GNOME's shortcut is
+    taken away: in a second session (Beam's virtual desktop on :20) GNOME
+    Shell grabs the key for its settings daemon, which never runs the
+    command there, so neither Kigo nor GNOME answered Alt+Space."""
     if not _schema(MEDIA_KEYS):
         return False
     accel = SHORTCUTS[index][1]
+    if x11():
+        _drop_binding()
+        _free(accel)
+        Gio.Settings.sync()
+        return True
     media = Gio.Settings.new(MEDIA_KEYS)
     paths = media.get_strv("custom-keybindings")
     if KEY_PATH not in paths:
@@ -87,12 +101,22 @@ def _free(accel):
             os.remove(saved)
 
 
+def _drop_binding():
+    """Takes GNOME's Kigo shortcut away, as a real change in this session
+    (see apply_shortcut), so this session's GNOME lets go of the key."""
+    media = Gio.Settings.new(MEDIA_KEYS)
+    binding = Gio.Settings.new_with_path(MEDIA_KEYS + ".custom-keybinding", KEY_PATH)
+    paths = media.get_strv("custom-keybindings")
+    if KEY_PATH in paths or binding.get_string("binding"):
+        binding.set_string("binding", "<Super><Shift><Alt>F12")   # anything, then nothing
+    binding.reset("binding")
+    media.set_strv("custom-keybindings", [p for p in paths if p != KEY_PATH])
+
+
 def remove_shortcut():
     if not _schema(MEDIA_KEYS):
         return
-    media = Gio.Settings.new(MEDIA_KEYS)
-    media.set_strv("custom-keybindings", [p for p in media.get_strv("custom-keybindings") if p != KEY_PATH])
-    Gio.Settings.new_with_path(MEDIA_KEYS + ".custom-keybinding", KEY_PATH).reset("binding")
+    _drop_binding()
     _free(None)
     Gio.Settings.sync()
 
