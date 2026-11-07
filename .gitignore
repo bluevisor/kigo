@@ -4,3 +4,4 @@ dist/
 compile_flags.txt
 .DS_Store
 mac/.build/
+__pycache__/
