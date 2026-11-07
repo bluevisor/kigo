@@ -423,6 +423,12 @@ struct SettingsPage: View {
 							ForEach(Shortcut.allCases, id: \.self) { Text($0.name).tag($0) }
 						}
 					}
+					if SaddleIslandLink.isInstalled {
+						line
+						toggle("Search in Saddle Island",
+							"\(prefs.shortcut.name) and F4 open the island's search; off, this panel",
+							$prefs.islandSearch)
+					}
 					line
 					toggle("Open at login", "Starts Kigo, hidden, when you log in", $prefs.openAtLogin)
 					line
