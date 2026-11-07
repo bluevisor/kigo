@@ -213,12 +213,14 @@ struct LauncherView: View {
 
 	private func searchHeader(_ m: Metrics) -> some View {
 		HStack(spacing: 12 * m.scale) {
-			Image(systemName: "magnifyingglass")
-				.font(.system(size: 18 * m.scale, weight: .medium))
-				.foregroundStyle(.secondary)
+			// The ginkgo leaf where Spotlight has its magnifier.
+			Image(nsImage: Icons.leaf)
+				.resizable()
+				.interpolation(.high)
+				.frame(width: (30 * m.scale).rounded(), height: (30 * m.scale).rounded())
 			QueryField(text: $model.query, fontSize: (21 * m.scale).rounded(), focusToken: model.focusToken)
 		}
-		.padding(.horizontal, 18 * m.scale)
+		.padding(.horizontal, 16 * m.scale)
 		.frame(height: m.field)
 	}
 
@@ -270,7 +272,7 @@ struct LauncherView: View {
 
 	private func footer(_ m: Metrics) -> some View {
 		HStack(spacing: 8 * m.scale) {
-			Image(nsImage: Icons.kigo).resizable().frame(width: 16 * m.scale, height: 16 * m.scale)
+			Image(nsImage: Icons.kigo).resizable().frame(width: 22 * m.scale, height: 22 * m.scale)
 			Text("Kigo").font(m.font(12)).foregroundStyle(.secondary)
 			Spacer()
 			if model.settingsOpen {

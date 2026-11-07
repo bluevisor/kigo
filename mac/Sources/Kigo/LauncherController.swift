@@ -18,7 +18,9 @@ final class LauncherPanel: NSPanel {
 		collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient, .ignoresCycle]
 		isOpaque = false
 		backgroundColor = .clear
-		hasShadow = true
+		// The window's own shadow and rim are rectangular and showed square
+		// corners around the rounded glass; the glass draws its own edge.
+		hasShadow = false
 		hidesOnDeactivate = false
 		isMovable = false
 		becomesKeyOnlyIfNeeded = false
@@ -105,6 +107,7 @@ final class LauncherController: NSObject, NSWindowDelegate {
 		if !panel.isVisible {
 			model.query = ""
 			model.confirming = nil
+			model.suggestionsHidden = false
 			model.settingsOpen = settings
 			model.prepare()
 			// On the screen with the pointer, a little above the middle.
@@ -189,7 +192,6 @@ final class LauncherController: NSObject, NSWindowDelegate {
 			context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
 			panel.animator().setFrame(target, display: true)
 		}
-		panel.invalidateShadow()
 	}
 
 	// Settings --------------------------------------------------------------
@@ -265,7 +267,19 @@ final class LauncherController: NSObject, NSWindowDelegate {
 
 		switch event.keyCode {
 		case 126: model.move(-1); return true
-		case 125: model.move(1); return true
+		case 125:
+			if model.query.isEmpty && model.suggestionsHidden {
+				model.suggestionsHidden = false
+				model.update(keepSelection: false)
+			} else {
+				model.move(1)
+			}
+			return true
+		case 51 where model.query.isEmpty && !model.results.isEmpty && !command && !option:
+			// Backspace with nothing typed: back to the bare search bar.
+			model.suggestionsHidden = true
+			model.update(keepSelection: false)
+			return true
 		case 116: model.move(-5); return true
 		case 121: model.move(5); return true
 		case 36, 76:

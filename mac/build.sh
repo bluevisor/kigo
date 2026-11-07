@@ -27,6 +27,7 @@ if [ ! -f .build/Kigo.icns ] || [ ../haiku/kigo.svg -nt .build/Kigo.icns ]; then
 	iconutil -c icns "$ICONSET" -o .build/Kigo.icns
 fi
 cp .build/Kigo.icns "$APP/Contents/Resources/Kigo.icns"
+cp ../haiku/kigo.svg "$APP/Contents/Resources/kigo-leaf.svg"
 
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>

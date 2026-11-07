@@ -75,4 +75,15 @@ enum Icons {
 	}
 
 	static var kigo: NSImage { NSApplication.shared.applicationIconImage }
+
+	/// The ginkgo leaf alone (no icon tile): the bundle's copy of
+	/// haiku/kigo.svg, or the source tree's when run from `swift build`.
+	static let leaf: NSImage = {
+		let source = URL(fileURLWithPath: #filePath)
+			.deletingLastPathComponent().appendingPathComponent("../../../haiku/kigo.svg")
+		for url in [Bundle.main.url(forResource: "kigo-leaf", withExtension: "svg"), source] {
+			if let url, let image = NSImage(contentsOf: url) { return image }
+		}
+		return kigo
+	}()
 }

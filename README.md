@@ -106,7 +106,8 @@ Toggle Dark Mode, common folders), arithmetic, links, `> shell` commands, and
 falls back to a web search.
 
 On the Mac, Cmd+Enter (or Option+Enter) shows the result in Finder,
-Cmd+Shift+C copies its path, Cmd+1 … Cmd+9 open the Nth result.
+Cmd+Shift+C copies its path, Cmd+1 … Cmd+9 open the Nth result. Backspace
+with nothing typed puts the suggestions away; Down brings them back.
 
     mac/build.sh             # mac/dist/Kigo.app, signed with your Developer ID
     mac/build.sh --install   # replace /Applications/Kigo.app and start it

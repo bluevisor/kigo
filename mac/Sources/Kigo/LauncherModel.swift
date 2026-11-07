@@ -13,6 +13,9 @@ final class LauncherModel: ObservableObject {
 	/// The result waiting for a second Enter (Restart, Shut Down…).
 	@Published var confirming: String?
 	@Published var settingsOpen = false
+	/// Backspace on the empty field puts the suggestions away, leaving the
+	/// bare search bar; typing or Down brings them back.
+	@Published var suggestionsHidden = false
 	/// The settings page's natural height, measured by SwiftUI.
 	@Published var settingsHeight: CGFloat = 0
 	/// Bumped to put the caret back in the field.
@@ -47,6 +50,7 @@ final class LauncherModel: ObservableObject {
 
 	private func queryChanged() {
 		confirming = nil
+		if !query.isEmpty { suggestionsHidden = false }
 		fileResults = []
 		if prefs.searchFiles && !query.hasPrefix(">") { files.start(query) } else { files.cancel() }
 		update(keepSelection: false)
@@ -66,7 +70,7 @@ final class LauncherModel: ObservableObject {
 		var list: [Result] = []
 
 		if query.isEmpty {
-			if prefs.suggestions { list = suggestions() }
+			if prefs.suggestions && !suggestionsHidden { list = suggestions() }
 		} else if query.hasPrefix(">") {
 			// "> command" runs a shell command in Terminal.
 			let command = query.dropFirst().trimmingCharacters(in: .whitespaces)
