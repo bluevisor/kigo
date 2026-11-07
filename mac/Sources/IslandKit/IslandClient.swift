@@ -121,6 +121,12 @@ nonisolated public final class IslandClient: Sendable {
         get { shared.handlers.withLock { $0.onSearchPick } }
         set { shared.handlers.withLock { $0.onSearchPick = newValue } }
     }
+    /// Search providers that chose their own search UI (`setOwnSearchPanel(true)`): F4 was pressed. Open (or
+    /// close) your own search.
+    public var onShowSearch: (@Sendable () -> Void)? {
+        get { shared.handlers.withLock { $0.onShowSearch } }
+        set { shared.handlers.withLock { $0.onShowSearch = newValue } }
+    }
     public var onPresentingChanged: (@Sendable (_ isPresenting: Bool) -> Void)? {
         get { shared.handlers.withLock { $0.onPresentingChanged } }
         set { shared.handlers.withLock { $0.onPresentingChanged = newValue } }
@@ -186,6 +192,18 @@ nonisolated public final class IslandClient: Sendable {
         engine.queue.async { [engine] in engine.sendResults(results) }
     }
 
+    /// Search providers: true to have F4 open your own search (`onShowSearch`) instead of the island's; false (the
+    /// default) keeps the island's. Kept and sent again on every accepted connection.
+    public func setOwnSearchPanel(_ own: Bool) {
+        engine.queue.async { [engine] in engine.setOwnSearchPanel(own) }
+    }
+
+    /// Search providers: your own shortcut opens (or closes) the island's search, as F4 does. False when Saddle
+    /// Island isn't connected and accepting you right now: show your own search instead.
+    public func openSearch() -> Bool {
+        engine.queue.sync { engine.openSearch() }
+    }
+
     /// Test hook: runs `body` on the IO queue after everything queued so far.
     func sync<T: Sendable>(_ body: @Sendable (Engine) -> T) -> T {
         engine.queue.sync { body(engine) }
@@ -206,6 +224,7 @@ extension IslandClient {
         var onPanelAction: (@Sendable (String, String?) -> Void)?
         var onSearchQuery: (@Sendable (SearchProviderQuery) -> Void)?
         var onSearchPick: (@Sendable (SearchProviderPick) -> Void)?
+        var onShowSearch: (@Sendable () -> Void)?
         var onPresentingChanged: (@Sendable (Bool) -> Void)?
         var onStateChange: (@Sendable (State) -> Void)?
         var onDismissed: (@Sendable (String) -> Void)?

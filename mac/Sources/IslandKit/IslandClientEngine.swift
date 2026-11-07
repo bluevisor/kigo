@@ -45,6 +45,8 @@ extension IslandClient {
         private var live: [String: Live] = [:]
         /// The app's panel (`IslandPanel`), sent again on every accepted connection.
         private var panel: IslandPanel?
+        /// A search provider's choice of its own search UI (`searchPanel`), sent again on every accepted connection.
+        private var ownSearchPanel = false
         private var liveOrder: [String] = []
         /// Activities the user swiped away in Saddle Island: they stay hidden there until they end, so
         /// updates for them are dropped here instead of restarting them without their options.
@@ -220,6 +222,7 @@ extension IslandClient {
                 enqueue(.start(id: id, content: entry.content, options: entry.options))
             }
             if let panel { enqueue(.panel(panel)) }
+            if ownSearchPanel { enqueue(.searchPanel(own: true)) }
         }
 
         /// Publishes (or with nil withdraws) the app's panel; unchanged content isn't re-sent.
@@ -230,6 +233,23 @@ extension IslandClient {
             if !activated { activate() }
             if accepted { enqueue(.panel(new)) }
             update()
+        }
+
+        /// A search provider's choice of search UI; unchanged isn't re-sent.
+        func setOwnSearchPanel(_ own: Bool) {
+            guard own != ownSearchPanel else { return }
+            ownSearchPanel = own
+            if !activated { activate() }
+            if accepted { enqueue(.searchPanel(own: own)) }
+            update()
+        }
+
+        /// A search provider's shortcut: open or close the island's search. Only while accepted.
+        func openSearch() -> Bool {
+            guard accepted else { return false }
+            enqueue(.openSearch)
+            update()
+            return true
         }
 
         /// A search provider's rows (or close) for a query. Only while accepted; never re-sent on reconnect.
@@ -273,6 +293,8 @@ extension IslandClient {
                 shared.deliver { $0.onSearchQuery?(query) }
             case .pick(let pick):
                 shared.deliver { $0.onSearchPick?(pick) }
+            case .showSearch:
+                shared.deliver { $0.onShowSearch?() }
             case .dismissed(let id):
                 if live.removeValue(forKey: id) != nil { liveOrder.removeAll { $0 == id } }
                 dismissed.insert(id)

@@ -345,6 +345,11 @@ public enum ClientMessage: Sendable, Hashable {
     case panel(IslandPanel?)
     /// A search provider's rows for a query (`SearchProviderResults`).
     case results(SearchProviderResults)
+    /// A search provider's choice of search UI: `own` true, F4 opens the app's own search (Saddle Island sends
+    /// `showSearch`) instead of the island's. False (the default, never sent) keeps the island's.
+    case searchPanel(own: Bool)
+    /// A search provider's own shortcut (Kigo's Option+Space): opens the island's search, or closes it, as F4 does.
+    case openSearch
 }
 
 /// Saddle Island → client.
@@ -367,11 +372,14 @@ public enum ServerMessage: Sendable, Hashable {
     case query(SearchProviderQuery)
     /// To a search provider's app: the user picked one of its rows.
     case pick(SearchProviderPick)
+    /// To a search provider's app that chose its own search UI (`searchPanel(own: true)`): F4 was pressed; open
+    /// (or close) your own search.
+    case showSearch
 }
 
 public enum FrameKey: String, CodingKey {
     case type, seq, t, hello, welcome, id, content, options, dismissAfter, accepted, presented, action, panel, value
-    case query, pick, results
+    case query, pick, results, own
 }
 
 public protocol FrameCodable {
@@ -415,6 +423,8 @@ extension ClientMessage: FrameCodable {
         case "ping": self = .ping
         case "panel": self = .panel(try c.decodeIfPresent(IslandPanel.self, forKey: .panel))
         case "results": self = .results(try c.decode(SearchProviderResults.self, forKey: .results))
+        case "searchPanel": self = .searchPanel(own: try c.decode(Bool.self, forKey: .own))
+        case "openSearch": self = .openSearch
         default: throw DecodingError.dataCorruptedError(forKey: .type, in: c, debugDescription: "unknown type \(type)")
         }
     }
@@ -436,6 +446,10 @@ extension ClientMessage: FrameCodable {
             try c.encode("panel", forKey: .type); try c.encodeIfPresent(panel, forKey: .panel)
         case .results(let results):
             try c.encode("results", forKey: .type); try c.encode(results, forKey: .results)
+        case .searchPanel(let own):
+            try c.encode("searchPanel", forKey: .type); try c.encode(own, forKey: .own)
+        case .openSearch:
+            try c.encode("openSearch", forKey: .type)
         }
     }
 }
@@ -456,6 +470,7 @@ extension ServerMessage: FrameCodable {
         case "dismissed": self = .dismissed(id: try c.decode(String.self, forKey: .id))
         case "query": self = .query(try c.decode(SearchProviderQuery.self, forKey: .query))
         case "pick": self = .pick(try c.decode(SearchProviderPick.self, forKey: .pick))
+        case "showSearch": self = .showSearch
         default: throw DecodingError.dataCorruptedError(forKey: .type, in: c, debugDescription: "unknown type \(type)")
         }
     }
@@ -473,6 +488,7 @@ extension ServerMessage: FrameCodable {
             try c.encodeIfPresent(value, forKey: .value)
         case .query(let query): try c.encode("query", forKey: .type); try c.encode(query, forKey: .query)
         case .pick(let pick): try c.encode("pick", forKey: .type); try c.encode(pick, forKey: .pick)
+        case .showSearch: try c.encode("showSearch", forKey: .type)
         }
     }
 }

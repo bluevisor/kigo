@@ -5,12 +5,17 @@ import AppKit
 final class AppDelegate: NSObject, NSApplicationDelegate {
 	private var controller: LauncherController!
 	private var hotKey: HotKey!
-	/// Answers Saddle Island's search while it's running (SaddleIsland.swift).
+	/// Answers Saddle Island's search while it's running, and opens it on the
+	/// shortcut (SaddleIsland.swift).
 	private var saddleIsland: SaddleIslandLink?
 
 	func applicationDidFinishLaunching(_ notification: Notification) {
 		controller = LauncherController()
-		hotKey = HotKey { [weak self] in self?.controller.toggle() }
+		hotKey = HotKey { [weak self] in
+			// With Saddle Island, its search (Kigo's results in the island); else Kigo's panel.
+			if self?.saddleIsland?.toggleSearch() == true { return }
+			self?.controller.toggle()
+		}
 		controller.onShortcutChanged = { [weak self] in self?.updateHotKey() }
 		updateHotKey()
 		if ProcessInfo.processInfo.environment["KIGO_SNAPSHOT"] == nil {

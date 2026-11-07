@@ -107,12 +107,14 @@ falls back to a web search.
 
 With [Saddle Island](https://github.com/bluevisor/SaddleIsland) running, Kigo
 plugs into it: with Saddle Island's Settings › Plugins › Kigo switch on (the
-default), Kigo answers Saddle Island's **F4** search. The search keeps Saddle
+default), **F4** and **Option+Space** both open Saddle Island's search, answered
+by Kigo. The search keeps Saddle
 Island's look, in the notch; the rows are Kigo's (ranked by what you use, with
 its commands, links and `> shell`) and Kigo opens what you pick. Saddle Island
 recognises Kigo by its code signature and talks to it over its local IslandKit
-socket; when Kigo isn't running, Saddle Island searches by itself. Option+Space
-opens Kigo's own panel either way.
+socket; when Kigo isn't running, Saddle Island searches by itself. Turn off
+Kigo's Settings › General › Search in Saddle Island to have both keys open
+Kigo's own panel instead. Without Saddle Island, Option+Space opens Kigo's panel.
 
 On the Mac, Cmd+Enter (or Option+Enter) shows the result in Finder,
 Cmd+Shift+C copies its path, Cmd+1 … Cmd+9 open the Nth result. Backspace

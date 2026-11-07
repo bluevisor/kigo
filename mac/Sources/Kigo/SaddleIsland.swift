@@ -13,9 +13,15 @@
 // shell and "press Return again". Saddle Island knows Kigo by its code
 // signature, so only a Kigo signed by bluevisor's team is asked.
 //
-// When Saddle Island isn't running the client waits quietly (it retries,
+// Option+Space opens the island's search too (`openSearch`), so both keys look
+// the same. Settings › Search in Saddle Island off sends both to Kigo's own
+// panel instead: Kigo says so (`searchPanel own`) and F4 arrives as
+// `showSearch`. When Saddle Island isn't running, or its Kigo switch is off,
+// Option+Space opens Kigo's panel, and the client waits quietly (it retries,
 // backing off to a minute, and at once when Saddle Island announces itself).
-// Option+Space opens Kigo's own panel either way.
+//
+// John, 2026-11-07: "default to use Saddle Island as the UI, regardless of
+// pressing F4 or option space. User can choose to use Kigo's own UI in options."
 import AppKit
 import Combine
 import IslandKit
@@ -23,6 +29,9 @@ import IslandKit
 final class SaddleIslandLink {
 	/// Rows the island shows; Kigo's fallbacks (web search, Terminal) always among them.
 	static let rowLimit = 9
+	/// Whether Settings offers the island-or-panel choice.
+	static let isInstalled = NSWorkspace.shared.urlForApplication(
+		withBundleIdentifier: "com.bucaastudio.saddleisland") != nil
 
 	private let client = IslandClient(name: "Kigo")
 	private let controller: LauncherController
@@ -38,6 +47,11 @@ final class SaddleIslandLink {
 		// Callbacks run on the main queue.
 		client.onSearchQuery = { [weak self] query in self?.query(query) }
 		client.onSearchPick = { [weak self] pick in self?.pick(pick) }
+		// F4 while Kigo's own panel is the choice.
+		client.onShowSearch = { [weak self] in self?.controller.toggle() }
+		Prefs.shared.$islandSearch.removeDuplicates()
+			.sink { [weak self] island in self?.client.setOwnSearchPanel(!island) }
+			.store(in: &subscriptions)
 		// Files arrive after the first answer; send the rows again.
 		model.$results.dropFirst().receive(on: DispatchQueue.main)
 			.sink { [weak self] _ in self?.resultsChanged() }
@@ -46,6 +60,15 @@ final class SaddleIslandLink {
 	}
 
 	deinit { client.invalidate() }
+
+	/// Option+Space: opens (or closes) the island's search, true, while Saddle
+	/// Island accepts Kigo and the island is the choice. False: Kigo's panel.
+	func toggleSearch() -> Bool {
+		guard Prefs.shared.islandSearch else { return false }
+		// Kigo's panel is up (its settings, say): the shortcut closes it.
+		if controller.isShowing { controller.hide(); return true }
+		return client.openSearch()
+	}
 
 	private func query(_ query: SearchProviderQuery) {
 		if controller.isShowing { controller.hide() }

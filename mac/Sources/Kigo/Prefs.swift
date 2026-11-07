@@ -71,6 +71,10 @@ final class Prefs: ObservableObject {
 	@Published var shortcut: Shortcut { didSet { defaults.set(shortcut.rawValue, forKey: "shortcut") } }
 	@Published var theme: ThemeColor { didSet { defaults.set(theme.rawValue, forKey: "theme") } }
 	@Published var updates: Bool { didSet { defaults.set(updates, forKey: "updates") } }
+	/// While Saddle Island runs with its Kigo plugin on, the shortcut and F4 open
+	/// the island's search (Kigo's results, the island's look); off, both open
+	/// Kigo's own panel.
+	@Published var islandSearch: Bool { didSet { defaults.set(islandSearch, forKey: "islandSearch") } }
 	@Published var openAtLogin: Bool {
 		didSet {
 			guard openAtLogin != oldValue else { return }
@@ -85,6 +89,7 @@ final class Prefs: ObservableObject {
 			"calculator": true, "suggestions": true, "openAtLogin": true,
 			"webSearch": WebSearch.duckDuckGo.rawValue, "size": Size.standard.rawValue,
 			"shortcut": Shortcut.option.rawValue, "theme": ThemeColor.ginkgo.rawValue, "updates": true,
+			"islandSearch": true,
 		])
 		searchApps = defaults.bool(forKey: "searchApps")
 		searchFiles = defaults.bool(forKey: "searchFiles")
@@ -97,6 +102,7 @@ final class Prefs: ObservableObject {
 		shortcut = Shortcut(rawValue: defaults.integer(forKey: "shortcut")) ?? .option
 		theme = ThemeColor(rawValue: defaults.integer(forKey: "theme")) ?? .ginkgo
 		updates = defaults.bool(forKey: "updates")
+		islandSearch = defaults.bool(forKey: "islandSearch")
 	}
 
 	/// Registers or removes Kigo as a login item. Only an installed copy (in an
