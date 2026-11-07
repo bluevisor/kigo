@@ -38,6 +38,9 @@ final class LauncherController: NSObject, NSWindowDelegate {
 	let model = LauncherModel()
 	private let prefs = Prefs.shared
 	private let panel = LauncherPanel()
+	/// Liquid Glass on macOS 26 and later, a blurred material before.
+	private var material: NSView!
+	private var hostingView: NSView?
 	private var top: CGFloat = 0
 	private var subscriptions: Set<AnyCancellable> = []
 	var onShortcutChanged: (() -> Void)?
@@ -51,7 +54,24 @@ final class LauncherController: NSObject, NSWindowDelegate {
 			onBack: { [weak self] in self?.closeSettings() })
 		let hosting = NSHostingView(rootView: view)
 		hosting.sizingOptions = []
-		panel.contentView = hosting
+		hostingView = hosting
+		if #available(macOS 26.0, *) {
+			let glass = NSGlassEffectView()
+			glass.style = .regular
+			glass.contentView = hosting
+			material = glass
+		} else {
+			let effect = NSVisualEffectView()
+			effect.material = .popover
+			effect.blendingMode = .behindWindow
+			effect.state = .active
+			hosting.frame = effect.bounds
+			hosting.autoresizingMask = [.width, .height]
+			effect.addSubview(hosting)
+			material = effect
+		}
+		panel.contentView = material
+		applyCorners()
 
 		// Resize after SwiftUI has the new results.
 		model.objectWillChange
@@ -128,7 +148,27 @@ final class LauncherController: NSObject, NSWindowDelegate {
 		return NSRect(x: (centerX - width / 2).rounded(), y: top - height, width: width, height: height)
 	}
 
+	/// Rounds the material itself: the window server draws it, so clipping
+	/// the SwiftUI content alone leaves square corners.
+	private func applyCorners() {
+		let radius = Metrics(scale: prefs.size.scale).corner
+		if #available(macOS 26.0, *), let glass = material as? NSGlassEffectView {
+			if glass.cornerRadius != radius { glass.cornerRadius = radius }
+		} else if let effect = material as? NSVisualEffectView {
+			let size = NSSize(width: radius * 2 + 1, height: radius * 2 + 1)
+			let mask = NSImage(size: size, flipped: false) { rect in
+				NSColor.black.setFill()
+				NSBezierPath(roundedRect: rect, xRadius: radius, yRadius: radius).fill()
+				return true
+			}
+			mask.capInsets = NSEdgeInsets(top: radius, left: radius, bottom: radius, right: radius)
+			mask.resizingMode = .stretch
+			effect.maskImage = mask
+		}
+	}
+
 	private func relayout(animated: Bool = false) {
+		applyCorners()
 		guard panel.isVisible else { return }
 		let target = frame(centerX: panel.frame.midX)
 		guard target != panel.frame else { return }
@@ -160,11 +200,18 @@ final class LauncherController: NSObject, NSWindowDelegate {
 		model.focusToken += 1
 	}
 
-	/// Saves what the panel shows as a PNG, for checking layouts in tests.
+	/// Saves the panel as the window server draws it (glass included) as a
+	/// PNG, for checking layouts in tests. An app may capture its own windows
+	/// without Screen Recording permission; the call is deprecated, so it's
+	/// looked up at run time.
 	func snapshot(to path: String) {
-		guard let view = panel.contentView,
-			let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return }
-		view.cacheDisplay(in: view.bounds, to: rep)
+		typealias Capture = @convention(c) (CGRect, UInt32, UInt32, UInt32) -> Unmanaged<CGImage>?
+		guard let symbol = dlsym(UnsafeMutableRawPointer(bitPattern: -2), "CGWindowListCreateImage") else { return }
+		let capture = unsafeBitCast(symbol, to: Capture.self)
+		// kCGWindowListOptionIncludingWindow, kCGWindowImageBoundsIgnoreFraming | BestResolution
+		guard let image = capture(.null, 1 << 3, UInt32(panel.windowNumber), 1 << 0 | 1 << 3)?
+			.takeRetainedValue() else { return }
+		let rep = NSBitmapImageRep(cgImage: image)
 		try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: path))
 	}
 

@@ -112,10 +112,11 @@ Cmd+Shift+C copies its path, Cmd+1 … Cmd+9 open the Nth result.
     mac/build.sh --install   # replace /Applications/Kigo.app and start it
     cd mac && swift test     # matcher, calculator, links, commands
 
-It registers itself as a login item once it runs from /Applications. For
-layout checks without Screen Recording permission,
+The panel is Liquid Glass on macOS 26 and later (a blurred material before),
+with rounded corners. It registers itself as a login item once it runs from
+/Applications. For layout checks without Screen Recording permission,
 `KIGO_SNAPSHOT=/tmp/k.png KIGO_QUERY=term .build/debug/Kigo` saves the
-panel, and its settings page, as PNGs.
+panel, and its settings page, as PNGs (it takes keyboard focus while it runs).
 
 ## License
 

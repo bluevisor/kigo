@@ -16,7 +16,10 @@ struct Metrics {
 	var listPadding: CGFloat { (6 * scale).rounded() }
 	var maxList: CGFloat { row * 9 + header * 2 }
 	var settingsBody: CGFloat { (540 * scale).rounded() }
-	var corner: CGFloat { 16 }
+	/// Liquid Glass corners: nearly a capsule around the bare field, and
+	/// rows concentric with the panel.
+	var corner: CGFloat { (26 * scale).rounded() }
+	var rowCorner: CGFloat { (12 * scale).rounded() }
 
 	func font(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
 		.system(size: (size * scale).rounded(), weight: weight)
@@ -31,18 +34,6 @@ struct Metrics {
 		}
 		return min(height, maxList)
 	}
-}
-
-struct VisualEffect: NSViewRepresentable {
-	func makeNSView(context: Context) -> NSVisualEffectView {
-		let view = NSVisualEffectView()
-		view.material = .popover
-		view.blendingMode = .behindWindow
-		view.state = .active
-		return view
-	}
-
-	func updateNSView(_ view: NSVisualEffectView, context: Context) {}
 }
 
 /// An NSTextField, for full control over focus and the caret.
@@ -104,7 +95,8 @@ struct Keycap: View {
 			.foregroundStyle(.secondary)
 			.padding(.horizontal, 5 * metrics.scale)
 			.frame(minWidth: 20 * metrics.scale, minHeight: 18 * metrics.scale)
-			.background(RoundedRectangle(cornerRadius: 4).fill(Color.primary.opacity(0.08)))
+			.background(RoundedRectangle(cornerRadius: 5 * metrics.scale, style: .continuous)
+				.fill(Color.primary.opacity(0.08)))
 	}
 }
 
@@ -166,8 +158,8 @@ struct ResultRow: View {
 		.padding(.horizontal, 10 * metrics.scale)
 		.frame(height: metrics.row)
 		.background(
-			RoundedRectangle(cornerRadius: 8 * metrics.scale, style: .continuous)
-				.fill(selected ? Color.accentColor.opacity(0.24) : Color.clear))
+			RoundedRectangle(cornerRadius: metrics.rowCorner, style: .continuous)
+				.fill(selected ? Color.primary.opacity(0.11) : Color.clear))
 		.contentShape(Rectangle())
 	}
 }
@@ -198,26 +190,25 @@ struct LauncherView: View {
 		VStack(spacing: 0) {
 			if model.settingsOpen {
 				settingsHeader(m)
-				Divider().opacity(0.6)
+				Divider().opacity(0.35)
 				SettingsPage(prefs: prefs, model: model, metrics: m)
 					.frame(maxHeight: .infinity)
-				Divider().opacity(0.6)
+				Divider().opacity(0.35)
 				footer(m)
 			} else {
 				searchHeader(m)
 				if !model.results.isEmpty {
-					Divider().opacity(0.6)
+					Divider().opacity(0.35)
 					resultsList(m)
-					Divider().opacity(0.6)
+					Divider().opacity(0.35)
 					footer(m)
 				}
 			}
 		}
 		.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-		.background(VisualEffect())
+		// The glass behind (LauncherController) is drawn by the window server;
+		// this only keeps the content inside the same corners.
 		.clipShape(RoundedRectangle(cornerRadius: m.corner, style: .continuous))
-		.overlay(RoundedRectangle(cornerRadius: m.corner, style: .continuous)
-			.strokeBorder(Color.primary.opacity(0.14), lineWidth: 0.5))
 	}
 
 	private func searchHeader(_ m: Metrics) -> some View {
@@ -263,7 +254,7 @@ struct LauncherView: View {
 							.onTapGesture { onActivate(i) }
 					}
 				}
-				.padding(.horizontal, 8 * m.scale)
+				.padding(.horizontal, 10 * m.scale)
 				.padding(.vertical, m.listPadding)
 			}
 			.scrollIndicators(.automatic)
@@ -297,9 +288,8 @@ struct LauncherView: View {
 				Keycap(text: "↩", metrics: m)
 			}
 		}
-		.padding(.horizontal, 14 * m.scale)
+		.padding(.horizontal, 18 * m.scale)
 		.frame(height: m.footer)
-		.background(Color.primary.opacity(0.03))
 	}
 }
 
