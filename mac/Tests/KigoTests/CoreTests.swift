@@ -57,4 +57,12 @@ final class CoreTests: XCTestCase {
 		XCTAssertEqual(searchCommands("sleep", all: false).count, 0)
 		XCTAssertEqual(searchCommands("kigo set", all: false).first?.id, "cmd:settings")
 	}
+
+	/// Sections go best match first; ties keep Applications, Commands, Files.
+	func testSectionOrder() {
+		// "temino": apps only match weakly (System Information), files exactly.
+		XCTAssertEqual(LauncherModel.sectionOrder([[428], [380], [1000, 900]]), [2, 0, 1])
+		XCTAssertEqual(LauncherModel.sectionOrder([[900], [900], [900]]), [0, 1, 2])
+		XCTAssertEqual(LauncherModel.sectionOrder([[], [650], []]), [1, 0, 2])
+	}
 }

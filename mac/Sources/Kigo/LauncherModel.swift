@@ -62,6 +62,15 @@ final class LauncherModel: ObservableObject {
 		confirming = nil
 	}
 
+	/// Sections best match first, so a group of strong matches isn't buried
+	/// under a weak one ("temino": the exact `temino` folders above System
+	/// Information, which only matches letter by letter). Equal best scores
+	/// keep the usual order: Applications, Commands, Files.
+	static func sectionOrder(_ scores: [[Double]]) -> [Int] {
+		let best = scores.map { $0.max() ?? 0 }
+		return scores.indices.sorted { best[$0] != best[$1] ? best[$0] > best[$1] : $0 < $1 }
+	}
+
 	func update(keepSelection: Bool) {
 		// Late results (files, a rescan) keep a row you moved to; from the top,
 		// the selection stays on the best match.
@@ -113,7 +122,7 @@ final class LauncherModel: ObservableObject {
 
 			let sections = ["Applications", "Commands", "Files"]
 			let limits = [LauncherModel.maxApps, LauncherModel.maxCommands, LauncherModel.maxFiles]
-			for g in groups.indices {
+			for g in LauncherModel.sectionOrder(groups.map { $0.map(\.score) }) {
 				let sorted = groups[g].enumerated().sorted {
 					$0.element.score != $1.element.score ? $0.element.score > $1.element.score : $0.offset < $1.offset
 				}
