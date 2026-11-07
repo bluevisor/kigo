@@ -101,8 +101,10 @@ def build_results(query, prefs, history, apps, file_results):
         top.section = "Top Hit"
         results.append(top)
 
-    for group, limit, section in zip(groups, (MAX_APPS, MAX_COMMANDS, MAX_FILES),
-                                     ("Applications", "Commands", "Files")):
+    limits = (MAX_APPS, MAX_COMMANDS, MAX_FILES)
+    sections = ("Applications", "Commands", "Files")
+    for g in section_order([[r.score for r in group] for group in groups]):
+        group, limit, section = groups[g], limits[g], sections[g]
         for result in sorted(group, key=lambda r: -r.score)[:limit]:
             result.section = section
             results.append(result)
@@ -117,6 +119,14 @@ def build_results(query, prefs, history, apps, file_results):
     results.append(Result("shell", "Run “%s”" % query, "shell", "in Terminal (or type > first)",
                           query, icon=("name", "utilities-terminal"), section=fallbacks))
     return results
+
+
+def section_order(scores):
+    """Sections best match first, so strong matches aren't buried under a weak
+    group ("temino": the exact temino folders above an app that only matches
+    letter by letter). Equal best scores keep Applications, Commands, Files."""
+    best = [max(s, default=0) for s in scores]
+    return sorted(range(len(scores)), key=lambda g: (-best[g], g))
 
 
 def suggestions(history, apps):

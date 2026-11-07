@@ -3,6 +3,7 @@ only, rebuilt every few minutes), scored with the same fuzzy matcher."""
 import os
 import threading
 import time
+from collections import deque
 
 from .fuzzy import fuzzy_score
 
@@ -29,9 +30,12 @@ class FileIndex:
     def _build(self):
         entries = []
         try:
-            stack = [self.root]
-            while stack and len(entries) < MAX_ENTRIES:
-                folder = stack.pop()
+            # Breadth first: folders near home are in before the cap is reached,
+            # however deep one big tree goes (~/Developer alone filled it, and
+            # ~/src/temino never made it in).
+            queue = deque([self.root])
+            while queue and len(entries) < MAX_ENTRIES:
+                folder = queue.popleft()
                 try:
                     with os.scandir(folder) as it:
                         for entry in it:
@@ -41,7 +45,7 @@ class FileIndex:
                             entries.append((name.lower(), entry.path))
                             try:
                                 if entry.is_dir(follow_symlinks=False):
-                                    stack.append(entry.path)
+                                    queue.append(entry.path)
                             except OSError:
                                 pass
                 except OSError:

@@ -56,7 +56,7 @@ class KigoApp(Gtk.Application):
             action = Gio.SimpleAction.new(name, None)
             action.connect("activate", handler)
             self.add_action(action)
-        self.hotkey = X11Hotkey(lambda: self.window.toggle())
+        self.hotkey = X11Hotkey(self._hotkey_pressed)
         if setup.installed():
             setup.apply_shortcut(self.prefs["shortcut"])
             setup.apply_autostart(self.prefs["autostart"])
@@ -79,10 +79,23 @@ class KigoApp(Gtk.Application):
             self.window.show_launcher()
         return 0
 
+    def _hotkey_pressed(self):
+        # The grab takes the focus while the key is down, so the panel never
+        # looks active here (`toggle` would show it again): showing is enough.
+        if self.window.get_visible():
+            self.window.hide_launcher()
+        else:
+            self.window.show_launcher()
+
     def _grab_hotkey(self):
+        """Kigo's own grab; retried for a while on X11, since GNOME lets go
+        of a shortcut Kigo just took away a moment later."""
         from .prefs import SHORTCUTS
-        self.hotkey.grab(SHORTCUTS[self.prefs["shortcut"]][1])
-        return False
+        self.grab_tries = getattr(self, "grab_tries", 0) + 1
+        if self.hotkey.grab(SHORTCUTS[self.prefs["shortcut"]][1]) or not setup.x11() or self.grab_tries >= 10:
+            self.grab_tries = 0
+            return False
+        return True   # GLib calls it again
 
     def apps_maybe_refresh(self):
         pass   # Gio.AppInfoMonitor rebuilds the index when .desktop files change
