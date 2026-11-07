@@ -1,5 +1,5 @@
 // What you picked in Kigo's settings page, kept in UserDefaults.
-import Foundation
+import AppKit
 import ServiceManagement
 
 enum WebSearch: Int, CaseIterable {
@@ -34,6 +34,29 @@ enum Shortcut: Int, CaseIterable {
 	var name: String { ["⌥ Space", "⌃ Space", "⌘ Space"][rawValue] }
 }
 
+/// The color of the selected row, switches and choices.
+enum ThemeColor: Int, CaseIterable {
+	case ginkgo, system, blue, purple, pink, red, orange, green, graphite
+
+	var name: String {
+		["Ginkgo", "System accent", "Blue", "Purple", "Pink", "Red", "Orange", "Green", "Graphite"][rawValue]
+	}
+
+	var color: NSColor {
+		switch self {
+		case .ginkgo: return NSColor(red: 0.86, green: 0.68, blue: 0.30, alpha: 1)
+		case .system: return .controlAccentColor
+		case .blue: return NSColor(red: 0.04, green: 0.52, blue: 1.0, alpha: 1)
+		case .purple: return NSColor(red: 0.66, green: 0.36, blue: 0.86, alpha: 1)
+		case .pink: return NSColor(red: 0.97, green: 0.33, blue: 0.62, alpha: 1)
+		case .red: return NSColor(red: 1.0, green: 0.29, blue: 0.25, alpha: 1)
+		case .orange: return NSColor(red: 1.0, green: 0.58, blue: 0.0, alpha: 1)
+		case .green: return NSColor(red: 0.22, green: 0.76, blue: 0.36, alpha: 1)
+		case .graphite: return NSColor(red: 0.6, green: 0.6, blue: 0.63, alpha: 1)
+		}
+	}
+}
+
 final class Prefs: ObservableObject {
 	static let shared = Prefs()
 	private let defaults = UserDefaults.standard
@@ -46,6 +69,8 @@ final class Prefs: ObservableObject {
 	@Published var webSearch: WebSearch { didSet { defaults.set(webSearch.rawValue, forKey: "webSearch") } }
 	@Published var size: Size { didSet { defaults.set(size.rawValue, forKey: "size") } }
 	@Published var shortcut: Shortcut { didSet { defaults.set(shortcut.rawValue, forKey: "shortcut") } }
+	@Published var theme: ThemeColor { didSet { defaults.set(theme.rawValue, forKey: "theme") } }
+	@Published var updates: Bool { didSet { defaults.set(updates, forKey: "updates") } }
 	@Published var openAtLogin: Bool {
 		didSet {
 			guard openAtLogin != oldValue else { return }
@@ -59,7 +84,7 @@ final class Prefs: ObservableObject {
 			"searchApps": true, "searchFiles": true, "searchCommands": true,
 			"calculator": true, "suggestions": true, "openAtLogin": true,
 			"webSearch": WebSearch.duckDuckGo.rawValue, "size": Size.standard.rawValue,
-			"shortcut": Shortcut.option.rawValue,
+			"shortcut": Shortcut.option.rawValue, "theme": ThemeColor.ginkgo.rawValue, "updates": true,
 		])
 		searchApps = defaults.bool(forKey: "searchApps")
 		searchFiles = defaults.bool(forKey: "searchFiles")
@@ -70,6 +95,8 @@ final class Prefs: ObservableObject {
 		webSearch = WebSearch(rawValue: defaults.integer(forKey: "webSearch")) ?? .duckDuckGo
 		size = Size(rawValue: defaults.integer(forKey: "size")) ?? .standard
 		shortcut = Shortcut(rawValue: defaults.integer(forKey: "shortcut")) ?? .option
+		theme = ThemeColor(rawValue: defaults.integer(forKey: "theme")) ?? .ginkgo
+		updates = defaults.bool(forKey: "updates")
 	}
 
 	/// Registers or removes Kigo as a login item. Only an installed copy (in an

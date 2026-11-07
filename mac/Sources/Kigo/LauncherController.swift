@@ -258,7 +258,8 @@ final class LauncherController: NSObject, NSWindowDelegate {
 			return true
 		}
 		if model.settingsOpen {
-			if event.keyCode == 53 {
+			// Esc or Backspace: back to searching.
+			if event.keyCode == 53 || event.keyCode == 51 {
 				closeSettings()
 				return true
 			}

@@ -119,13 +119,12 @@ struct ResultIcon: View {
 	}
 }
 
-/// Ginkgo gold, for the selected row.
-private let gold = Color(red: 0.86, green: 0.68, blue: 0.30)
-
 struct ResultRow: View {
 	let result: Result
 	let selected: Bool
 	let confirming: Bool
+	/// The theme color, for the selected row.
+	let tint: Color
 	let metrics: Metrics
 
 	var body: some View {
@@ -162,9 +161,9 @@ struct ResultRow: View {
 		.background {
 			if selected {
 				RoundedRectangle(cornerRadius: metrics.rowCorner, style: .continuous)
-					.fill(gold.opacity(0.16))
+					.fill(tint.opacity(0.17))
 					.overlay(RoundedRectangle(cornerRadius: metrics.rowCorner, style: .continuous)
-						.strokeBorder(gold.opacity(0.38), lineWidth: 1))
+						.strokeBorder(tint.opacity(0.42), lineWidth: 1))
 			}
 		}
 		.contentShape(Rectangle())
@@ -244,6 +243,7 @@ struct LauncherView: View {
 		}
 		.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 		.background(PanelSurface(corner: m.corner))
+		.tint(Color(nsColor: prefs.theme.color))
 		.clipShape(RoundedRectangle(cornerRadius: m.corner, style: .continuous))
 	}
 
@@ -257,8 +257,10 @@ struct LauncherView: View {
 
 	private func searchHeader(_ m: Metrics) -> some View {
 		HStack(spacing: 12 * m.scale) {
-			// The ginkgo leaf where Spotlight has its magnifier.
-			leaf((28 * m.scale).rounded())
+			Image(systemName: "magnifyingglass")
+				.font(.system(size: 19 * m.scale, weight: .medium))
+				.foregroundStyle(.secondary)
+				.frame(width: (24 * m.scale).rounded())
 			QueryField(text: $model.query, fontSize: (21 * m.scale).rounded(), focusToken: model.focusToken)
 			Button(action: onSettings) {
 				Image(systemName: "gearshape")
@@ -303,7 +305,8 @@ struct LauncherView: View {
 							SectionHeader(title: result.section, separated: i > 0, metrics: m)
 						}
 						ResultRow(result: result, selected: i == model.selection,
-							confirming: model.confirming == result.id, metrics: m)
+							confirming: model.confirming == result.id, tint: Color(nsColor: prefs.theme.color),
+							metrics: m)
 							.id(i)
 							.onTapGesture { onActivate(i) }
 					}
@@ -400,6 +403,12 @@ struct SettingsPage: View {
 
 				section("Appearance")
 				card {
+					row("Theme color", prefs.theme.name) {
+						HStack(spacing: 8 * m.scale) {
+							ForEach(ThemeColor.allCases, id: \.self) { swatch($0) }
+						}
+					}
+					line
 					row("Size", "Text and rows") {
 						Picker("", selection: $prefs.size) {
 							ForEach(Size.allCases, id: \.self) { Text($0.name).tag($0) }
@@ -417,8 +426,13 @@ struct SettingsPage: View {
 					line
 					toggle("Open at login", "Starts Kigo, hidden, when you log in", $prefs.openAtLogin)
 					line
+					toggle("Update automatically", "Installs new versions from GitHub once a day", $prefs.updates)
+					line
 					row("Kigo \(appVersion)", "Settings: ⌥, or ⌘,") {
-						Button("Quit Kigo") { NSApp.terminate(nil) }
+						HStack(spacing: 8) {
+							Button("Check for Updates") { Updater.shared.check(manual: true) }
+							Button("Quit Kigo") { NSApp.terminate(nil) }
+						}
 					}
 				}
 			}
@@ -448,6 +462,26 @@ struct SettingsPage: View {
 			.padding(.leading, 4 * metrics.scale)
 			.padding(.top, 14 * metrics.scale)
 			.padding(.bottom, 6 * metrics.scale)
+	}
+
+	/// One theme color to pick; the chosen one is ringed.
+	private func swatch(_ theme: ThemeColor) -> some View {
+		let size = (18 * metrics.scale).rounded()
+		let chosen = prefs.theme == theme
+		return Button { prefs.theme = theme } label: {
+			Circle()
+				.fill(theme == .system
+					? AnyShapeStyle(AngularGradient(colors: [.red, .orange, .yellow, .green, .blue, .purple, .red],
+						center: .center))
+					: AnyShapeStyle(Color(nsColor: theme.color)))
+				.frame(width: size, height: size)
+				.overlay(Circle().strokeBorder(Color.primary.opacity(0.18), lineWidth: 0.5))
+				.padding(3)
+				.overlay(Circle().strokeBorder(Color.primary.opacity(chosen ? 0.75 : 0), lineWidth: 1.5))
+				.contentShape(Circle())
+		}
+		.buttonStyle(.plain)
+		.help(theme.name)
 	}
 
 	/// Rows grouped on a bordered card, like System Settings.

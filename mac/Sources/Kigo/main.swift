@@ -12,6 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 		hotKey.register(Prefs.shared.shortcut)
 		controller.onShortcutChanged = { [weak self] in self?.hotKey.register(Prefs.shared.shortcut) }
 		Prefs.applyLoginItem(Prefs.shared.openAtLogin)
+		Updater.shared.start()
 
 		// Say hello the first time; after that, start hidden (as at login).
 		let arguments = CommandLine.arguments

@@ -44,6 +44,8 @@ private let commands: [CommandInfo] = [
 		keywords: "preferences options configure setup", symbol: "gearshape"),
 	CommandInfo(id: "reindex", title: "Reload Applications", subtitle: "Kigo", keywords: "refresh rescan reindex",
 		symbol: "arrow.triangle.2.circlepath"),
+	CommandInfo(id: "update", title: "Check for Updates", subtitle: "Kigo", keywords: "upgrade update version kigo",
+		symbol: "arrow.down.circle"),
 	CommandInfo(id: "quit", title: "Quit Kigo", subtitle: "Kigo", keywords: "exit close", symbol: "xmark.circle"),
 ]
 
@@ -216,6 +218,9 @@ enum Actions {
 			return appleScript("tell application \"Terminal\"\nactivate\ndo script \"\"\nend tell")
 		case "reindex":
 			NotificationCenter.default.post(name: .kigoReindex, object: nil)
+			return true
+		case "update":
+			Updater.shared.check(manual: true)
 			return true
 		case "quit":
 			NSApp.terminate(nil)

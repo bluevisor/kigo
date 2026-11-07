@@ -111,11 +111,15 @@ with nothing typed puts the suggestions away; Down brings them back.
 
     mac/build.sh             # mac/dist/Kigo.app, signed with your Developer ID
     mac/build.sh --install   # replace /Applications/Kigo.app and start it
+    mac/build.sh --release   # notarized mac/dist/kigo-<version>-macos.zip
     cd mac && swift test     # matcher, calculator, links, commands
 
 The panel is a rounded, blurred charcoal surface (near white in light mode)
 with a hairline border and a shadow; the gear in the search bar opens
-settings. It registers itself as a login item once it runs from
+settings, where you also pick a theme color. Like the Haiku app it updates
+itself from GitHub releases once a day (`kigo-<version>-macos.zip`, checked
+against this copy's Developer ID team before it's swapped in), or from
+**Check for Updates**. It registers itself as a login item once it runs from
 /Applications. For layout checks without Screen Recording permission,
 `KIGO_SNAPSHOT=/tmp/k.png KIGO_QUERY=term .build/debug/Kigo` saves the
 panel, and its settings page, as PNGs (it takes keyboard focus while it runs).

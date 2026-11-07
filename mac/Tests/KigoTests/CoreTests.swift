@@ -44,6 +44,13 @@ final class CoreTests: XCTestCase {
 		XCTAssertNil(urlFor("readme.md5"))
 	}
 
+	func testVersions() {
+		XCTAssertTrue(Updater.isNewer("0.1.10", than: "0.1.9"))
+		XCTAssertTrue(Updater.isNewer("0.2", than: "0.1.12"))
+		XCTAssertFalse(Updater.isNewer("0.1.12", than: "0.1.12"))
+		XCTAssertFalse(Updater.isNewer("0.1.5", than: "0.1.12"))
+	}
+
 	func testCommands() {
 		XCTAssertEqual(searchCommands("lock", all: true).first?.id, "cmd:lock")
 		XCTAssertEqual(searchCommands("reboot", all: true).first?.id, "cmd:restart")

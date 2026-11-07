@@ -2,6 +2,9 @@
 # Builds Kigo.app for macOS into mac/dist, signed with the Developer ID.
 #   mac/build.sh             build mac/dist/Kigo.app
 #   mac/build.sh --install   and replace /Applications/Kigo.app, then start it
+#   mac/build.sh --release   and notarize it into mac/dist/kigo-<version>-macos.zip,
+#                            the asset Kigo's updater downloads (KIGO_NOTARY_PROFILE
+#                            names the notarytool keychain profile)
 set -e
 cd "$(dirname "$0")"
 VERSION=$(tr -d ' \n' < ../VERSION)
@@ -52,8 +55,11 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 PLIST
 
 IDENTITY=${KIGO_SIGN_IDENTITY:-$(security find-identity -v -p codesigning | sed -n 's/.*"\(Developer ID Application[^"]*\)".*/\1/p' | head -1)}
+# Notarization needs a secure timestamp; local builds skip the round trip.
+TIMESTAMP=--timestamp=none
+[ "$1" = "--release" ] && TIMESTAMP=--timestamp
 if [ -n "$IDENTITY" ]; then
-	codesign --force --options runtime --timestamp=none --sign "$IDENTITY" "$APP"
+	codesign --force --options runtime $TIMESTAMP --sign "$IDENTITY" "$APP"
 else
 	codesign --force --sign - "$APP"
 fi
@@ -65,4 +71,16 @@ if [ "$1" = "--install" ]; then
 	cp -R "$APP" /Applications/Kigo.app
 	open /Applications/Kigo.app
 	echo "installed /Applications/Kigo.app"
+fi
+
+if [ "$1" = "--release" ]; then
+	ZIP=dist/kigo-$VERSION-macos.zip
+	rm -f "$ZIP"
+	ditto -c -k --keepParent "$APP" "$ZIP"
+	xcrun notarytool submit "$ZIP" --keychain-profile "${KIGO_NOTARY_PROFILE:-terminal-cam-notary}" --wait
+	xcrun stapler staple "$APP"
+	# Zip again so the download carries the stapled ticket.
+	rm -f "$ZIP"
+	ditto -c -k --keepParent "$APP" "$ZIP"
+	echo "released $ZIP"
 fi
