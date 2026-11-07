@@ -44,6 +44,8 @@ final class LauncherController: NSObject, NSWindowDelegate {
 	private var top: CGFloat = 0
 	private var subscriptions: Set<AnyCancellable> = []
 	var onShortcutChanged: (() -> Void)?
+	/// Shows without taking the keyboard (snapshots while you keep typing).
+	var passive = false
 
 	override init() {
 		super.init()
@@ -114,8 +116,12 @@ final class LauncherController: NSObject, NSWindowDelegate {
 		} else if settings {
 			openSettings()
 		}
-		panel.makeKeyAndOrderFront(nil)
-		if !model.settingsOpen { model.focusToken += 1 }
+		if passive {
+			panel.orderFrontRegardless()
+		} else {
+			panel.makeKeyAndOrderFront(nil)
+			if !model.settingsOpen { model.focusToken += 1 }
+		}
 	}
 
 	func hide() {
@@ -134,16 +140,20 @@ final class LauncherController: NSObject, NSWindowDelegate {
 
 	private func frame(centerX: CGFloat) -> NSRect {
 		let m = Metrics(scale: prefs.size.scale)
+		// Grow to fit the content, down to just above the bottom of the screen.
+		let screenBottom = (panel.screen ?? NSScreen.main)?.visibleFrame.minY ?? 0
+		let room = top - screenBottom - 24 - m.field - 2 - m.footer
 		let width: CGFloat
 		var height = m.field
 		if model.settingsOpen {
 			width = m.settingsWidth
-			let screenBottom = (panel.screen ?? NSScreen.main)?.visibleFrame.minY ?? 0
-			let room = top - screenBottom - 40 - m.field - m.footer
-			height += 1 + min(m.settingsBody, max(room, m.row * 4)) + 1 + m.footer
+			let body = model.settingsHeight > 0 ? model.settingsHeight : m.settingsBody
+			height += 1 + min(body, max(room, m.row * 4)) + 1 + m.footer
 		} else {
 			width = m.width
-			if !model.results.isEmpty { height += 1 + m.listHeight(model.results) + 1 + m.footer }
+			if !model.results.isEmpty {
+				height += 1 + min(m.listHeight(model.results), max(room, m.row * 4)) + 1 + m.footer
+			}
 		}
 		return NSRect(x: (centerX - width / 2).rounded(), y: top - height, width: width, height: height)
 	}
@@ -172,14 +182,12 @@ final class LauncherController: NSObject, NSWindowDelegate {
 		guard panel.isVisible else { return }
 		let target = frame(centerX: panel.frame.midX)
 		guard target != panel.frame else { return }
-		if animated {
-			NSAnimationContext.runAnimationGroup { context in
-				context.duration = 0.18
-				context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-				panel.animator().setFrame(target, display: true)
-			}
-		} else {
-			panel.setFrame(target, display: true)
+		// Always through the animator: a plain setFrame during the settings
+		// morph is overridden when the morph lands on its older target.
+		NSAnimationContext.runAnimationGroup { context in
+			context.duration = animated ? 0.18 : 0
+			context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+			panel.animator().setFrame(target, display: true)
 		}
 		panel.invalidateShadow()
 	}

@@ -26,10 +26,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 	}
 
 	// KIGO_SNAPSHOT=out.png [KIGO_QUERY=text] shows the launcher, types the
-	// query and saves what the panel shows (out.png, out-settings.png).
+	// query and saves what the panel shows (out.png, out-settings.png), without
+	// taking the keyboard.
 	private func snapshotForTests() {
 		let env = ProcessInfo.processInfo.environment
 		guard let path = env["KIGO_SNAPSHOT"] else { return }
+		controller.passive = true
 		controller.show()
 		controller.model.query = env["KIGO_QUERY"] ?? ""
 		DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {

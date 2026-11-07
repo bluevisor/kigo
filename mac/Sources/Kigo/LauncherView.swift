@@ -14,7 +14,6 @@ struct Metrics {
 	var footer: CGFloat { (36 * scale).rounded() }
 	var icon: CGFloat { (26 * scale).rounded() }
 	var listPadding: CGFloat { (6 * scale).rounded() }
-	var maxList: CGFloat { row * 9 + header * 2 }
 	var settingsBody: CGFloat { (540 * scale).rounded() }
 	/// Liquid Glass corners: nearly a capsule around the bare field, and
 	/// rows concentric with the panel.
@@ -25,14 +24,15 @@ struct Metrics {
 		.system(size: (size * scale).rounded(), weight: weight)
 	}
 
-	/// The results list's height: rows and section headers, up to about nine rows.
+	/// The results list's full height: every row and section header. The
+	/// panel grows to fit it, up to the bottom of the screen.
 	func listHeight(_ results: [Result]) -> CGFloat {
 		var height = listPadding * 2
 		for (i, result) in results.enumerated() {
 			if i == 0 || results[i - 1].section != result.section { height += header }
 			height += row
 		}
-		return min(height, maxList)
+		return height
 	}
 }
 
@@ -257,8 +257,8 @@ struct LauncherView: View {
 				.padding(.horizontal, 10 * m.scale)
 				.padding(.vertical, m.listPadding)
 			}
-			.scrollIndicators(.automatic)
-			.frame(height: m.listHeight(model.results))
+			.scrollIndicators(.never)
+			.frame(maxHeight: .infinity)
 			.onChange(of: model.selection) { _, selection in
 				proxy.scrollTo(selection)
 			}
@@ -347,6 +347,13 @@ struct SettingsPage: View {
 			}
 			.padding(.horizontal, 18 * m.scale)
 			.padding(.bottom, 12 * m.scale)
+			.background(GeometryReader { geometry in
+				Color.clear.preference(key: ContentHeight.self, value: geometry.size.height)
+			})
+		}
+		.scrollIndicators(.never)
+		.onPreferenceChange(ContentHeight.self) { height in
+			if abs(model.settingsHeight - height) > 0.5 { model.settingsHeight = height }
 		}
 		.pickerStyle(.segmented)
 		.labelsHidden()
@@ -383,4 +390,10 @@ struct SettingsPage: View {
 		}
 		.padding(.vertical, 7 * metrics.scale)
 	}
+}
+
+/// The settings page's natural height, so the panel can grow to fit it.
+private struct ContentHeight: PreferenceKey {
+	static var defaultValue: CGFloat = 0
+	static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
 }

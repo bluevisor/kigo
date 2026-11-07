@@ -13,6 +13,8 @@ final class LauncherModel: ObservableObject {
 	/// The result waiting for a second Enter (Restart, Shut Down…).
 	@Published var confirming: String?
 	@Published var settingsOpen = false
+	/// The settings page's natural height, measured by SwiftUI.
+	@Published var settingsHeight: CGFloat = 0
 	/// Bumped to put the caret back in the field.
 	@Published var focusToken = 0
 
