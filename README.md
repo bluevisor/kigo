@@ -107,7 +107,10 @@ falls back to a web search.
 
 On the Mac, Cmd+Enter (or Option+Enter) shows the result in Finder,
 Cmd+Shift+C copies its path, Cmd+1 … Cmd+9 open the Nth result. Backspace
-with nothing typed puts the suggestions away; Down brings them back.
+with nothing typed puts the suggestions away; Down brings them back. While
+an app showing another computer is in front (Beam, UTM, Screen Sharing,
+Parallels, VMware, Remote Desktop) Kigo lets go of Option+Space, so it opens
+the Kigo on that machine instead.
 
     mac/build.sh             # mac/dist/Kigo.app, signed with your Developer ID
     mac/build.sh --install   # replace /Applications/Kigo.app and start it
@@ -140,7 +143,11 @@ Alt+Shift+C copies its path, Alt+1 … Alt+9 open the Nth result.
 It installs for your user only (`~/.local/share/kigo`, `~/.local/bin/kigo`)
 and needs `python3-gi` and `gir1.2-gtk-3.0`. On GNOME it binds Alt+Space as
 a custom shortcut, moving GNOME's window menu off it (Kigo puts it back if
-you pick another shortcut, and on `kigo --uninstall`). It updates itself
+you pick another shortcut, and on `kigo --uninstall`). Where that shortcut
+doesn't reach it, such as a second GNOME session like Beam's virtual
+desktop (its own settings daemons may never hear of the binding), Kigo grabs
+the key from the X server itself. Each session runs its own Kigo; one
+installs an update and the others restart onto it. It updates itself
 from these releases once a day, checking each download against the SHA-256
 GitHub publishes for it.
 

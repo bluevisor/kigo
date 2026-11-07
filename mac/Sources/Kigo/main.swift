@@ -9,8 +9,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 	func applicationDidFinishLaunching(_ notification: Notification) {
 		controller = LauncherController()
 		hotKey = HotKey { [weak self] in self?.controller.toggle() }
-		hotKey.register(Prefs.shared.shortcut)
-		controller.onShortcutChanged = { [weak self] in self?.hotKey.register(Prefs.shared.shortcut) }
+		controller.onShortcutChanged = { [weak self] in self?.updateHotKey() }
+		updateHotKey()
+		NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didActivateApplicationNotification,
+			object: nil, queue: .main) { [weak self] _ in self?.updateHotKey() }
 		Prefs.applyLoginItem(Prefs.shared.openAtLogin)
 		Updater.shared.start()
 
@@ -42,6 +44,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 				self.controller.snapshot(to: path.replacingOccurrences(of: ".png", with: "-settings.png"))
 				NSApp.terminate(nil)
 			}
+		}
+	}
+
+	/// Apps showing another computer's screen. While one is in front Kigo lets
+	/// go of its shortcut, so Option+Space reaches the Kigo on that machine
+	/// (Beam to Linux, UTM to Haiku) instead of opening this one.
+	private static let remoteScreens: Set<String> = [
+		"dev.bluevisor.beam", "com.utmapp.UTM", "com.apple.ScreenSharing",
+		"com.parallels.desktop.console", "com.vmware.fusion", "com.microsoft.rdc.macos",
+		"com.p5sys.jump.mac.viewer", "com.realvnc.vncviewer",
+	]
+
+	private func updateHotKey() {
+		let front = NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? ""
+		if AppDelegate.remoteScreens.contains(front) {
+			hotKey.unregister()
+		} else {
+			hotKey.register(Prefs.shared.shortcut)
 		}
 	}
 

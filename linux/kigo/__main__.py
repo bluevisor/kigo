@@ -13,6 +13,7 @@ from .apps import AppIndex, launch  # noqa: E402
 from .commands import open_uri, run_command, terminal  # noqa: E402
 from .files import FileIndex  # noqa: E402
 from .history import History  # noqa: E402
+from .hotkey import X11Hotkey  # noqa: E402
 from .prefs import Prefs  # noqa: E402
 from . import setup  # noqa: E402
 from .ui import Launcher, reveal_result  # noqa: E402
@@ -50,10 +51,14 @@ class KigoApp(Gtk.Application):
             action = Gio.SimpleAction.new(name, None)
             action.connect("activate", handler)
             self.add_action(action)
+        self.hotkey = X11Hotkey(lambda: self.window.toggle())
         if setup.installed():
             setup.apply_shortcut(self.prefs["shortcut"])
             setup.apply_autostart(self.prefs["autostart"])
             self.updater.start()
+        # After GNOME's binding: where its shortcut holds the key this fails
+        # and GNOME runs the toggle; elsewhere Kigo listens itself.
+        GLib.timeout_add(1500, self._grab_hotkey)
 
     def do_command_line(self, command_line):
         args = command_line.get_arguments()[1:]
@@ -69,12 +74,20 @@ class KigoApp(Gtk.Application):
             self.window.show_launcher()
         return 0
 
+    def _grab_hotkey(self):
+        from .prefs import SHORTCUTS
+        self.hotkey.grab(SHORTCUTS[self.prefs["shortcut"]][1])
+        return False
+
     def apps_maybe_refresh(self):
         pass   # Gio.AppInfoMonitor rebuilds the index when .desktop files change
 
     def pref_changed(self, key):
-        if key == "shortcut" and setup.installed():
-            setup.apply_shortcut(self.prefs["shortcut"])
+        if key == "shortcut":
+            if setup.installed():
+                setup.apply_shortcut(self.prefs["shortcut"])
+            self.hotkey.release()
+            GLib.timeout_add(1500, self._grab_hotkey)
         elif key == "autostart" and setup.installed():
             setup.apply_autostart(self.prefs["autostart"])
 
