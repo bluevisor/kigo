@@ -2,6 +2,7 @@
 once a day (and from Check for Updates) it reads the latest release,
 downloads kigo-<version>-linux.tar.gz, checks it against the SHA-256 GitHub
 publishes for it, installs it over this copy and restarts."""
+import fcntl
 import hashlib
 import json
 import os
@@ -17,12 +18,23 @@ from gi.repository import GLib
 
 from . import VERSION
 from .prefs import config_dir
+from .history import data_dir
 from .setup import WRAPPER, installed
 
 LATEST = "https://api.github.com/repos/bluevisor/kigo/releases/latest"
 RELEASES = "https://github.com/bluevisor/kigo/releases"
 SUFFIX = "-linux.tar.gz"
 DAY = 86400
+# The installed copy's version, which another session's Kigo may have updated.
+DISK_VERSION = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "VERSION")
+
+
+def disk_version():
+    try:
+        with open(DISK_VERSION) as f:
+            return f.read().strip()
+    except OSError:
+        return VERSION
 
 
 def is_newer(a, b):
@@ -44,6 +56,10 @@ class Updater:
         GLib.timeout_add_seconds(4 * 3600, lambda: self._check_if_due() or True)
 
     def _check_if_due(self):
+        # Kigo in another session (Beam's virtual desktop, say) installed a
+        # newer copy: start on it too.
+        if installed() and is_newer(disk_version(), VERSION):
+            return self._restart()
         if not self.app.prefs["updates"]:
             return
         try:
@@ -82,6 +98,14 @@ class Updater:
             if manual:
                 GLib.idle_add(lambda: subprocess.Popen(["xdg-open", RELEASES]) and False)
             return self._report(False, "", "")
+        # One install at a time across sessions; the one that waited finds
+        # the files already new and just restarts.
+        lock = open(os.path.join(data_dir(), "update.lock"), "w")
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        if not is_newer(version, disk_version()):
+            lock.close()
+            self.checking = False
+            return GLib.idle_add(self._restart)
         staging = tempfile.mkdtemp(prefix="kigo-update-")
         try:
             archive = os.path.join(staging, asset["name"])
@@ -104,7 +128,12 @@ class Updater:
             return self._report(manual, "Can't update Kigo", "The download failed.")
         finally:
             shutil.rmtree(staging, ignore_errors=True)
+            lock.close()
+        GLib.idle_add(self._restart)
+
+    def _restart(self):
         # The new copy starts once this one has gone (one Kigo per session).
         subprocess.Popen(["sh", "-c", "sleep 1; exec '%s' --background --updated" % WRAPPER],
                          start_new_session=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        GLib.idle_add(self.app.quit)
+        self.app.quit()
+        return False

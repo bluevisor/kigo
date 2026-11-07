@@ -46,6 +46,11 @@ def apply_shortcut(index):
     binding = Gio.Settings.new_with_path(MEDIA_KEYS + ".custom-keybinding", KEY_PATH)
     binding.set_string("name", "Kigo")
     binding.set_string("command", toggle_command())
+    # dconf announces a change only on the D-Bus of the session that makes
+    # it, so a second session (Beam's virtual desktop on :20 has its own
+    # bus) never hears of a value set elsewhere. Writing it from this
+    # session, as a real change, makes its daemons pick it up.
+    binding.set_string("binding", "")
     binding.set_string("binding", accel)
     _free(accel)
     Gio.Settings.sync()
@@ -65,11 +70,17 @@ def _free(accel):
         settings = Gio.Settings.new(schema)
         values = settings.get_strv(key)
         saved = _saved_path(key)
-        if conflict == accel and accel in values:
-            if not os.path.exists(saved):
+        if conflict == accel:
+            if accel in values and not os.path.exists(saved):
                 with open(saved, "w") as f:
                     f.write("\n".join(values))
-            settings.set_strv(key, [v for v in values if v != accel])
+            if os.path.exists(saved):
+                with open(saved) as f:
+                    original = [v for v in f.read().split("\n") if v]
+                # As above: a real change, so this session's window manager
+                # lets go of the key too.
+                settings.set_strv(key, original)
+                settings.set_strv(key, [v for v in original if v != accel])
         elif conflict != accel and os.path.exists(saved):
             with open(saved) as f:
                 settings.set_strv(key, [v for v in f.read().split("\n") if v])
