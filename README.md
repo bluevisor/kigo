@@ -105,6 +105,13 @@ index of your home folder, commands (Sleep, Lock Screen, Restart, Empty Trash,
 Toggle Dark Mode, common folders), arithmetic, links, `> shell` commands, and
 falls back to a web search.
 
+With [Saddle Island](https://github.com/bluevisor/SaddleIsland) running, Kigo
+plugs into it: Saddle Island's Settings › Plugins › Kigo switch (on by
+default) makes **F4** open Kigo instead of Saddle Island's own search. Saddle
+Island recognises Kigo by its code signature and hands it each F4 press over
+its local IslandKit socket; when Kigo isn't running, F4 is Saddle Island's
+search again. Option+Space works either way.
+
 On the Mac, Cmd+Enter (or Option+Enter) shows the result in Finder,
 Cmd+Shift+C copies its path, Cmd+1 … Cmd+9 open the Nth result. Backspace
 with nothing typed puts the suggestions away; Down brings them back. While
