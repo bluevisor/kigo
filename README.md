@@ -95,6 +95,28 @@ mapped, and rewriting a mapped add-on crashes the input_server (no keyboard or
 mouse until it restarts). Kigo copies a new filter beside the old one and
 renames it over.
 
+## macOS
+
+`mac/` holds a native Mac version: the same ranking, calculator, history and
+settings, as a Swift app with no Dock icon. **Option+Space** opens it (Control
+or Command+Space in Settings), **Option+,** or **Cmd+,** opens its settings.
+It finds applications and System Settings panes, files through Spotlight's
+index of your home folder, commands (Sleep, Lock Screen, Restart, Empty Trash,
+Toggle Dark Mode, common folders), arithmetic, links, `> shell` commands, and
+falls back to a web search.
+
+On the Mac, Cmd+Enter (or Option+Enter) shows the result in Finder,
+Cmd+Shift+C copies its path, Cmd+1 … Cmd+9 open the Nth result.
+
+    mac/build.sh             # mac/dist/Kigo.app, signed with your Developer ID
+    mac/build.sh --install   # replace /Applications/Kigo.app and start it
+    cd mac && swift test     # matcher, calculator, links, commands
+
+It registers itself as a login item once it runs from /Applications. For
+layout checks without Screen Recording permission,
+`KIGO_SNAPSHOT=/tmp/k.png KIGO_QUERY=term .build/debug/Kigo` saves the
+panel, and its settings page, as PNGs.
+
 ## License
 
 MIT, see [LICENSE](LICENSE).
