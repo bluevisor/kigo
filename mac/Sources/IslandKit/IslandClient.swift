@@ -109,6 +109,18 @@ nonisolated public final class IslandClient: Sendable {
         get { shared.handlers.withLock { $0.onPanelAction } }
         set { shared.handlers.withLock { $0.onPanelAction = newValue } }
     }
+    /// Search providers (a plugin with `searchProvider`, Kigo): the island's search field changed. Answer with
+    /// `sendSearchResults` for `query.id`.
+    public var onSearchQuery: (@Sendable (_ query: SearchProviderQuery) -> Void)? {
+        get { shared.handlers.withLock { $0.onSearchQuery } }
+        set { shared.handlers.withLock { $0.onSearchQuery = newValue } }
+    }
+    /// Search providers: the user picked one of your rows. Open it, then `sendSearchResults` with `close`, or
+    /// new rows to keep the search open.
+    public var onSearchPick: (@Sendable (_ pick: SearchProviderPick) -> Void)? {
+        get { shared.handlers.withLock { $0.onSearchPick } }
+        set { shared.handlers.withLock { $0.onSearchPick = newValue } }
+    }
     public var onPresentingChanged: (@Sendable (_ isPresenting: Bool) -> Void)? {
         get { shared.handlers.withLock { $0.onPresentingChanged } }
         set { shared.handlers.withLock { $0.onPresentingChanged = newValue } }
@@ -166,6 +178,14 @@ nonisolated public final class IslandClient: Sendable {
         engine.queue.async { [engine] in engine.setPanel(panel) }
     }
 
+    // MARK: Search provider
+
+    /// Your rows for the island's search query `results.query` (best first), or `close` after a pick. Sent only
+    /// while Saddle Island accepts you; an answer to an old query is ignored there.
+    public func sendSearchResults(_ results: SearchProviderResults) {
+        engine.queue.async { [engine] in engine.sendResults(results) }
+    }
+
     /// Test hook: runs `body` on the IO queue after everything queued so far.
     func sync<T: Sendable>(_ body: @Sendable (Engine) -> T) -> T {
         engine.queue.sync { body(engine) }
@@ -184,6 +204,8 @@ extension IslandClient {
     nonisolated struct Handlers: Sendable {
         var onAction: (@Sendable (String, String) -> Void)?
         var onPanelAction: (@Sendable (String, String?) -> Void)?
+        var onSearchQuery: (@Sendable (SearchProviderQuery) -> Void)?
+        var onSearchPick: (@Sendable (SearchProviderPick) -> Void)?
         var onPresentingChanged: (@Sendable (Bool) -> Void)?
         var onStateChange: (@Sendable (State) -> Void)?
         var onDismissed: (@Sendable (String) -> Void)?

@@ -232,6 +232,14 @@ extension IslandClient {
             update()
         }
 
+        /// A search provider's rows (or close) for a query. Only while accepted; never re-sent on reconnect.
+        func sendResults(_ results: SearchProviderResults) {
+            if !activated { activate() }
+            guard accepted else { return }
+            enqueue(.results(results.trimmed))
+            update()
+        }
+
         // MARK: Reading
 
         private func received(_ data: Data, closed: Bool) {
@@ -261,6 +269,10 @@ extension IslandClient {
                 shared.deliver { $0.onAction?(id, action) }
             case .panelAction(let row, let value):
                 shared.deliver { $0.onPanelAction?(row, value) }
+            case .query(let query):
+                shared.deliver { $0.onSearchQuery?(query) }
+            case .pick(let pick):
+                shared.deliver { $0.onSearchPick?(pick) }
             case .dismissed(let id):
                 if live.removeValue(forKey: id) != nil { liveOrder.removeAll { $0 == id } }
                 dismissed.insert(id)

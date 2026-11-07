@@ -5,7 +5,7 @@ import AppKit
 final class AppDelegate: NSObject, NSApplicationDelegate {
 	private var controller: LauncherController!
 	private var hotKey: HotKey!
-	/// F4, when Saddle Island hands it over (SaddleIsland.swift).
+	/// Answers Saddle Island's search while it's running (SaddleIsland.swift).
 	private var saddleIsland: SaddleIslandLink?
 
 	func applicationDidFinishLaunching(_ notification: Notification) {
@@ -14,7 +14,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 		controller.onShortcutChanged = { [weak self] in self?.updateHotKey() }
 		updateHotKey()
 		if ProcessInfo.processInfo.environment["KIGO_SNAPSHOT"] == nil {
-			saddleIsland = SaddleIslandLink { [weak self] in self?.controller.toggle() }
+			saddleIsland = SaddleIslandLink(controller: controller)
 		}
 		NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didActivateApplicationNotification,
 			object: nil, queue: .main) { [weak self] _ in self?.updateHotKey() }

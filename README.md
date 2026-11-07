@@ -106,11 +106,13 @@ Toggle Dark Mode, common folders), arithmetic, links, `> shell` commands, and
 falls back to a web search.
 
 With [Saddle Island](https://github.com/bluevisor/SaddleIsland) running, Kigo
-plugs into it: Saddle Island's Settings › Plugins › Kigo switch (on by
-default) makes **F4** open Kigo instead of Saddle Island's own search. Saddle
-Island recognises Kigo by its code signature and hands it each F4 press over
-its local IslandKit socket; when Kigo isn't running, F4 is Saddle Island's
-search again. Option+Space works either way.
+plugs into it: with Saddle Island's Settings › Plugins › Kigo switch on (the
+default), Kigo answers Saddle Island's **F4** search. The search keeps Saddle
+Island's look, in the notch; the rows are Kigo's (ranked by what you use, with
+its commands, links and `> shell`) and Kigo opens what you pick. Saddle Island
+recognises Kigo by its code signature and talks to it over its local IslandKit
+socket; when Kigo isn't running, Saddle Island searches by itself. Option+Space
+opens Kigo's own panel either way.
 
 On the Mac, Cmd+Enter (or Option+Enter) shows the result in Finder,
 Cmd+Shift+C copies its path, Cmd+1 … Cmd+9 open the Nth result. Backspace

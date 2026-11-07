@@ -240,6 +240,100 @@ public struct IslandPanel: Codable, Sendable, Hashable {
     }
 }
 
+// MARK: - Search provider
+
+/// What the user typed in the island's search, sent to the app of a plugin that provides the search
+/// (`PluginPrivileges.searchProvider`, Kigo). `id` grows with every keystroke and each time the search opens
+/// (then with empty `text`: the app's suggestions, if any).
+public struct SearchProviderQuery: Codable, Sendable, Hashable {
+    public var id: Int
+    public var text: String
+
+    public init(id: Int, text: String) { self.id = id; self.text = text }
+}
+
+/// One row of a search provider's results, drawn by the island in its own style.
+public struct SearchProviderRow: Codable, Sendable, Hashable {
+    /// Echoed back in `SearchProviderPick`. Unique within the results.
+    public var id: String
+    public var title: String
+    public var subtitle: String?
+    /// The Finder icon of this path (an app, file, folder or Settings extension).
+    public var iconPath: String?
+    /// The default browser's icon, when there's no `iconPath`.
+    public var browser: Bool?
+    /// An SF Symbol on a grey tile, when there's neither.
+    public var symbol: String?
+    /// What ⌘C copies with the row selected.
+    public var copy: String?
+    /// ⌘Return shows it in Finder (the pick's `how` is `reveal`).
+    public var reveal: Bool?
+    /// Drawn as an answer (larger, all emphasised): a calculator result.
+    public var answer: Bool?
+
+    public init(
+        id: String, title: String, subtitle: String? = nil, iconPath: String? = nil, browser: Bool? = nil,
+        symbol: String? = nil, copy: String? = nil, reveal: Bool? = nil, answer: Bool? = nil
+    ) {
+        self.id = id
+        self.title = title
+        self.subtitle = subtitle
+        self.iconPath = iconPath
+        self.browser = browser
+        self.symbol = symbol
+        self.copy = copy
+        self.reveal = reveal
+        self.answer = answer
+    }
+}
+
+/// A search provider's answer to query `query`: its rows, best first (replacing any earlier answer: send again
+/// when more arrive, such as files), or `close` to close the search (after a pick opened something).
+public struct SearchProviderResults: Codable, Sendable, Hashable {
+    public var query: Int
+    public var rows: [SearchProviderRow]?
+    public var close: Bool?
+
+    public init(query: Int, rows: [SearchProviderRow]? = nil, close: Bool? = nil) {
+        self.query = query
+        self.rows = rows
+        self.close = close
+    }
+
+    public static let maxRows = 20
+
+    /// At most `maxRows` rows, text cut to 160 characters, ids to 200.
+    public var trimmed: SearchProviderResults {
+        func cut(_ text: String?) -> String? { text.map { String($0.prefix(160)) } }
+        return SearchProviderResults(
+            query: query,
+            rows: rows.map { rows in
+                rows.prefix(Self.maxRows).map { row in
+                    var r = row
+                    r.id = String(row.id.prefix(200))
+                    r.title = String(row.title.prefix(160))
+                    r.subtitle = cut(row.subtitle)
+                    r.symbol = row.symbol.map { String($0.prefix(64)) }
+                    r.copy = row.copy.map { String($0.prefix(4096)) }
+                    return r
+                }
+            },
+            close: close)
+    }
+}
+
+/// The user picked row `row` of the answer to query `query`: open it, or (`reveal`) show it in Finder. The app
+/// answers with `SearchProviderResults` (`close`, or new rows to stay open, such as "press Return again").
+public struct SearchProviderPick: Codable, Sendable, Hashable {
+    public enum How: String, Codable, Sendable { case open, reveal }
+
+    public var query: Int
+    public var row: String
+    public var how: How
+
+    public init(query: Int, row: String, how: How) { self.query = query; self.row = row; self.how = how }
+}
+
 /// Client → Saddle Island.
 public enum ClientMessage: Sendable, Hashable {
     case hello(Hello)
@@ -249,6 +343,8 @@ public enum ClientMessage: Sendable, Hashable {
     case ping
     /// The app's screen in the island (`IslandPanel`); nil takes it away.
     case panel(IslandPanel?)
+    /// A search provider's rows for a query (`SearchProviderResults`).
+    case results(SearchProviderResults)
 }
 
 /// Saddle Island → client.
@@ -267,10 +363,15 @@ public enum ServerMessage: Sendable, Hashable {
     /// number, a choice's option), or `"@shown"` when the panel opened (refresh it now). Sent as an `action`
     /// frame with id `"panel"`.
     case panelAction(row: String, value: String?)
+    /// To a search provider's app: the island's search field now reads this.
+    case query(SearchProviderQuery)
+    /// To a search provider's app: the user picked one of its rows.
+    case pick(SearchProviderPick)
 }
 
 public enum FrameKey: String, CodingKey {
     case type, seq, t, hello, welcome, id, content, options, dismissAfter, accepted, presented, action, panel, value
+    case query, pick, results
 }
 
 public protocol FrameCodable {
@@ -313,6 +414,7 @@ extension ClientMessage: FrameCodable {
                                 dismissAfter: try c.decodeIfPresent(Double.self, forKey: .dismissAfter))
         case "ping": self = .ping
         case "panel": self = .panel(try c.decodeIfPresent(IslandPanel.self, forKey: .panel))
+        case "results": self = .results(try c.decode(SearchProviderResults.self, forKey: .results))
         default: throw DecodingError.dataCorruptedError(forKey: .type, in: c, debugDescription: "unknown type \(type)")
         }
     }
@@ -332,6 +434,8 @@ extension ClientMessage: FrameCodable {
             try c.encode("ping", forKey: .type)
         case .panel(let panel):
             try c.encode("panel", forKey: .type); try c.encodeIfPresent(panel, forKey: .panel)
+        case .results(let results):
+            try c.encode("results", forKey: .type); try c.encode(results, forKey: .results)
         }
     }
 }
@@ -350,6 +454,8 @@ extension ServerMessage: FrameCodable {
                 ? .panelAction(row: action, value: try c.decodeIfPresent(String.self, forKey: .value))
                 : .action(id: id, action: action)
         case "dismissed": self = .dismissed(id: try c.decode(String.self, forKey: .id))
+        case "query": self = .query(try c.decode(SearchProviderQuery.self, forKey: .query))
+        case "pick": self = .pick(try c.decode(SearchProviderPick.self, forKey: .pick))
         default: throw DecodingError.dataCorruptedError(forKey: .type, in: c, debugDescription: "unknown type \(type)")
         }
     }
@@ -365,6 +471,8 @@ extension ServerMessage: FrameCodable {
         case .panelAction(let row, let value):
             try c.encode("action", forKey: .type); try c.encode("panel", forKey: .id); try c.encode(row, forKey: .action)
             try c.encodeIfPresent(value, forKey: .value)
+        case .query(let query): try c.encode("query", forKey: .type); try c.encode(query, forKey: .query)
+        case .pick(let pick): try c.encode("pick", forKey: .type); try c.encode(pick, forKey: .pick)
         }
     }
 }

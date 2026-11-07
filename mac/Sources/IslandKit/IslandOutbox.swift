@@ -46,6 +46,10 @@ nonisolated struct IslandOutbox: Sendable {
             // Only the latest panel matters.
             messages.removeAll { if case .panel = $0 { true } else { false } }
             messages.append(message)
+        case .results(let results):
+            // A newer answer replaces unsent ones (each is full state); a close is never dropped.
+            messages.removeAll { if case .results(let old) = $0 { old.close != true && old.query <= results.query } else { false } }
+            messages.append(message)
         }
         enforceCapacity()
     }
@@ -72,7 +76,7 @@ nonisolated struct IslandOutbox: Sendable {
         messages.lastIndex { message in
             switch message {
             case .start(let other, _, _), .update(let other, _), .end(let other, _): other == id
-            case .hello, .ping, .panel: false
+            case .hello, .ping, .panel, .results: false
             }
         }
     }
@@ -91,7 +95,7 @@ extension ClientMessage {
     nonisolated var isDroppable: Bool {
         switch self {
         case .update, .ping: true
-        case .hello, .start, .end, .panel: false
+        case .hello, .start, .end, .panel, .results: false
         }
     }
 
