@@ -10,15 +10,14 @@ struct Metrics {
 	var settingsWidth: CGFloat { (760 * scale).rounded() }
 	var field: CGFloat { (56 * scale).rounded() }
 	var row: CGFloat { (40 * scale).rounded() }
-	var header: CGFloat { (26 * scale).rounded() }
+	var header: CGFloat { (30 * scale).rounded() }
 	var footer: CGFloat { (36 * scale).rounded() }
 	var icon: CGFloat { (26 * scale).rounded() }
 	var listPadding: CGFloat { (6 * scale).rounded() }
 	var settingsBody: CGFloat { (540 * scale).rounded() }
-	/// Liquid Glass corners: nearly a capsule around the bare field, and
-	/// rows concentric with the panel.
-	var corner: CGFloat { (26 * scale).rounded() }
-	var rowCorner: CGFloat { (12 * scale).rounded() }
+	/// Rounded panel corners, with rows concentric to them.
+	var corner: CGFloat { (20 * scale).rounded() }
+	var rowCorner: CGFloat { (10 * scale).rounded() }
 
 	func font(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
 		.system(size: (size * scale).rounded(), weight: weight)
@@ -120,15 +119,17 @@ struct ResultIcon: View {
 	}
 }
 
+/// Ginkgo gold, for the selected row.
+private let gold = Color(red: 0.86, green: 0.68, blue: 0.30)
+
 struct ResultRow: View {
 	let result: Result
 	let selected: Bool
 	let confirming: Bool
-	let shortcut: Int?
 	let metrics: Metrics
 
 	var body: some View {
-		HStack(spacing: 10 * metrics.scale) {
+		HStack(spacing: 12 * metrics.scale) {
 			ResultIcon(result: result, size: metrics.icon)
 			Text(result.title)
 				.font(metrics.font(14))
@@ -146,36 +147,71 @@ struct ResultRow: View {
 				Text("Press ↩ again to \(result.title.lowercased())")
 					.font(metrics.font(12, .medium))
 					.foregroundStyle(.red)
+			} else if selected {
+				Image(systemName: "return")
+					.font(.system(size: 13 * metrics.scale, weight: .medium))
+					.foregroundStyle(.secondary)
 			} else {
 				Text(result.kind.label)
 					.font(metrics.font(12))
 					.foregroundStyle(.tertiary)
-				if let shortcut, selected {
-					Keycap(text: "⌘\(shortcut)", metrics: metrics)
-				}
 			}
 		}
-		.padding(.horizontal, 10 * metrics.scale)
+		.padding(.horizontal, 12 * metrics.scale)
 		.frame(height: metrics.row)
-		.background(
-			RoundedRectangle(cornerRadius: metrics.rowCorner, style: .continuous)
-				.fill(selected ? Color.primary.opacity(0.11) : Color.clear))
+		.background {
+			if selected {
+				RoundedRectangle(cornerRadius: metrics.rowCorner, style: .continuous)
+					.fill(gold.opacity(0.16))
+					.overlay(RoundedRectangle(cornerRadius: metrics.rowCorner, style: .continuous)
+						.strokeBorder(gold.opacity(0.38), lineWidth: 1))
+			}
+		}
 		.contentShape(Rectangle())
 	}
 }
 
 struct SectionHeader: View {
 	let title: String
+	/// A hairline above every section but the first.
+	let separated: Bool
 	let metrics: Metrics
 
 	var body: some View {
-		Text(title)
-			.font(metrics.font(11, .semibold))
-			.foregroundStyle(.secondary)
-			.lineLimit(1)
-			.padding(.horizontal, 10 * metrics.scale)
-			.frame(height: metrics.header, alignment: .bottomLeading)
-			.padding(.bottom, 2)
+		VStack(alignment: .leading, spacing: 0) {
+			Rectangle()
+				.fill(Color.primary.opacity(separated ? 0.09 : 0))
+				.frame(height: 1)
+				.padding(.horizontal, 6 * metrics.scale)
+			Spacer(minLength: 0)
+			Text(title)
+				.font(metrics.font(12, .semibold))
+				.foregroundStyle(.secondary)
+				.lineLimit(1)
+				.padding(.horizontal, 12 * metrics.scale)
+				.padding(.bottom, 4 * metrics.scale)
+		}
+		.frame(height: metrics.header)
+	}
+}
+
+/// The panel's surface: a blurred material (LauncherController) under a
+/// mostly solid fill, a hairline border and the window's shadow, so its edge
+/// reads clearly on any background.
+struct PanelSurface: View {
+	let corner: CGFloat
+
+	/// Deep charcoal in dark mode, near white in light, a little see-through.
+	static let fill = NSColor(name: nil) { appearance in
+		appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+			? NSColor(white: 0.11, alpha: 0.9) : NSColor(white: 0.97, alpha: 0.9)
+	}
+
+	var body: some View {
+		let shape = RoundedRectangle(cornerRadius: corner, style: .continuous)
+		shape
+			.fill(Color(nsColor: PanelSurface.fill))
+			.overlay(shape.strokeBorder(Color.primary.opacity(0.16), lineWidth: 1))
 	}
 }
 
@@ -184,43 +220,59 @@ struct LauncherView: View {
 	@ObservedObject var prefs: Prefs
 	let onActivate: (Int) -> Void
 	let onBack: () -> Void
+	let onSettings: () -> Void
 
 	var body: some View {
 		let m = Metrics(scale: prefs.size.scale)
 		VStack(spacing: 0) {
 			if model.settingsOpen {
 				settingsHeader(m)
-				Divider().opacity(0.35)
+				divider
 				SettingsPage(prefs: prefs, model: model, metrics: m)
 					.frame(maxHeight: .infinity)
-				Divider().opacity(0.35)
+				divider
 				footer(m)
 			} else {
 				searchHeader(m)
 				if !model.results.isEmpty {
-					Divider().opacity(0.35)
+					divider
 					resultsList(m)
-					Divider().opacity(0.35)
+					divider
 					footer(m)
 				}
 			}
 		}
 		.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-		// The glass behind (LauncherController) is drawn by the window server;
-		// this only keeps the content inside the same corners.
+		.background(PanelSurface(corner: m.corner))
 		.clipShape(RoundedRectangle(cornerRadius: m.corner, style: .continuous))
+	}
+
+	private var divider: some View {
+		Rectangle().fill(Color.primary.opacity(0.10)).frame(height: 1)
+	}
+
+	private func leaf(_ size: CGFloat) -> some View {
+		Image(nsImage: Icons.leaf).resizable().interpolation(.high).frame(width: size, height: size)
 	}
 
 	private func searchHeader(_ m: Metrics) -> some View {
 		HStack(spacing: 12 * m.scale) {
 			// The ginkgo leaf where Spotlight has its magnifier.
-			Image(nsImage: Icons.leaf)
-				.resizable()
-				.interpolation(.high)
-				.frame(width: (30 * m.scale).rounded(), height: (30 * m.scale).rounded())
+			leaf((28 * m.scale).rounded())
 			QueryField(text: $model.query, fontSize: (21 * m.scale).rounded(), focusToken: model.focusToken)
+			Button(action: onSettings) {
+				Image(systemName: "gearshape")
+					.font(.system(size: 16 * m.scale, weight: .regular))
+					.foregroundStyle(.secondary)
+					.frame(width: 26 * m.scale, height: 26 * m.scale)
+					.contentShape(Rectangle())
+			}
+			.buttonStyle(.plain)
+			.help("Settings (⌘, or ⌥,)")
+			Keycap(text: "⌘,", metrics: m)
 		}
-		.padding(.horizontal, 16 * m.scale)
+		.padding(.leading, 16 * m.scale)
+		.padding(.trailing, 14 * m.scale)
 		.frame(height: m.field)
 	}
 
@@ -234,7 +286,8 @@ struct LauncherView: View {
 					.contentShape(Rectangle())
 			}
 			.buttonStyle(.plain)
-			Text("Settings").font(m.font(18, .semibold))
+			leaf((26 * m.scale).rounded())
+			Text("Kigo Settings").font(m.font(18, .semibold))
 			Spacer()
 		}
 		.padding(.horizontal, 14 * m.scale)
@@ -247,11 +300,10 @@ struct LauncherView: View {
 				LazyVStack(alignment: .leading, spacing: 0) {
 					ForEach(Array(model.results.enumerated()), id: \.offset) { i, result in
 						if i == 0 || model.results[i - 1].section != result.section {
-							SectionHeader(title: result.section, metrics: m)
+							SectionHeader(title: result.section, separated: i > 0, metrics: m)
 						}
 						ResultRow(result: result, selected: i == model.selection,
-							confirming: model.confirming == result.id, shortcut: i < 9 ? i + 1 : nil,
-							metrics: m)
+							confirming: model.confirming == result.id, metrics: m)
 							.id(i)
 							.onTapGesture { onActivate(i) }
 					}
@@ -270,27 +322,35 @@ struct LauncherView: View {
 		}
 	}
 
+	private func hint(_ key: String, _ label: String, _ m: Metrics, strong: Bool = false) -> some View {
+		HStack(spacing: 6 * m.scale) {
+			Keycap(text: key, metrics: m)
+			Text(label)
+				.font(m.font(12, strong ? .medium : .regular))
+				.foregroundStyle(strong ? .primary : .secondary)
+		}
+	}
+
+	private var footerSeparator: some View {
+		Rectangle().fill(Color.primary.opacity(0.15)).frame(width: 1, height: 16).padding(.horizontal, 4)
+	}
+
 	private func footer(_ m: Metrics) -> some View {
 		HStack(spacing: 8 * m.scale) {
-			Image(nsImage: Icons.kigo).resizable().frame(width: 22 * m.scale, height: 22 * m.scale)
-			Text("Kigo").font(m.font(12)).foregroundStyle(.secondary)
+			leaf((20 * m.scale).rounded())
+			Text("Kigo").font(m.font(13)).foregroundStyle(.secondary)
 			Spacer()
 			if model.settingsOpen {
-				Text("Back").font(m.font(12))
-				Keycap(text: "esc", metrics: m)
+				hint("esc", "Back", m, strong: true)
 			} else if let result = model.selected {
 				if result.canReveal {
-					Text("Show in Finder").font(m.font(12)).foregroundStyle(.secondary)
-					Keycap(text: "⌘↩", metrics: m)
-					Rectangle().fill(Color.primary.opacity(0.15)).frame(width: 1, height: 14 * m.scale)
-						.padding(.horizontal, 2)
+					hint("⌘↩", "Show in Finder", m)
+					footerSeparator
 				}
-				Text(model.confirming == result.id ? "Confirm" : result.primaryAction)
-					.font(m.font(12, .medium))
-				Keycap(text: "↩", metrics: m)
+				hint("↩", model.confirming == result.id ? "Confirm" : result.primaryAction, m, strong: true)
 			}
 		}
-		.padding(.horizontal, 18 * m.scale)
+		.padding(.horizontal, 16 * m.scale)
 		.frame(height: m.footer)
 	}
 }
@@ -308,47 +368,62 @@ struct SettingsPage: View {
 		ScrollView(.vertical) {
 			VStack(alignment: .leading, spacing: 0) {
 				section("Search")
-				toggle("Applications", "Apps and System Settings panes", $prefs.searchApps)
-				toggle("Files and folders", "Spotlight's index of your home folder", $prefs.searchFiles)
-				toggle("Commands", "Sleep, Lock Screen, Empty Trash, folders and more", $prefs.searchCommands)
-				toggle("Calculator", "Answers arithmetic as you type", $prefs.calculator)
-				row("Web search", "Offered last, for anything else") {
-					Picker("", selection: $prefs.webSearch) {
-						ForEach(WebSearch.allCases, id: \.self) { Text($0.name).tag($0) }
+				card {
+					toggle("Applications", "Apps and System Settings panes", $prefs.searchApps)
+					line
+					toggle("Files and folders", "Spotlight's index of your home folder", $prefs.searchFiles)
+					line
+					toggle("Commands", "Sleep, Lock Screen, Empty Trash, folders and more", $prefs.searchCommands)
+					line
+					toggle("Calculator", "Answers arithmetic as you type", $prefs.calculator)
+					line
+					row("Web search", "Offered last, for anything else") {
+						Picker("", selection: $prefs.webSearch) {
+							ForEach(WebSearch.allCases, id: \.self) { Text($0.name).tag($0) }
+						}
 					}
 				}
 
 				section("Suggestions")
-				toggle("Suggest what you use most", "Shown before you type anything", $prefs.suggestions)
-				row("Search history", cleared ? "Cleared" : "Forget what you opened; ranking starts over") {
-					Button("Clear") {
-						model.history.clear()
-						model.update(keepSelection: false)
-						cleared = true
+				card {
+					toggle("Suggest what you use most", "Shown before you type anything", $prefs.suggestions)
+					line
+					row("Search history", cleared ? "Cleared" : "Forget what you opened; ranking starts over") {
+						Button("Clear") {
+							model.history.clear()
+							model.update(keepSelection: false)
+							cleared = true
+						}
+						.disabled(cleared)
 					}
-					.disabled(cleared)
 				}
 
 				section("Appearance")
-				row("Size", "Text and rows") {
-					Picker("", selection: $prefs.size) {
-						ForEach(Size.allCases, id: \.self) { Text($0.name).tag($0) }
+				card {
+					row("Size", "Text and rows") {
+						Picker("", selection: $prefs.size) {
+							ForEach(Size.allCases, id: \.self) { Text($0.name).tag($0) }
+						}
 					}
 				}
 
 				section("General")
-				row("Shortcut", "Opens Kigo from anywhere") {
-					Picker("", selection: $prefs.shortcut) {
-						ForEach(Shortcut.allCases, id: \.self) { Text($0.name).tag($0) }
+				card {
+					row("Shortcut", "Opens Kigo from anywhere") {
+						Picker("", selection: $prefs.shortcut) {
+							ForEach(Shortcut.allCases, id: \.self) { Text($0.name).tag($0) }
+						}
+					}
+					line
+					toggle("Open at login", "Starts Kigo, hidden, when you log in", $prefs.openAtLogin)
+					line
+					row("Kigo \(appVersion)", "Settings: ⌥, or ⌘,") {
+						Button("Quit Kigo") { NSApp.terminate(nil) }
 					}
 				}
-				toggle("Open at login", "Starts Kigo, hidden, when you log in", $prefs.openAtLogin)
-				row("Kigo \(appVersion)", "Settings: ⌥, or ⌘,") {
-					Button("Quit Kigo") { NSApp.terminate(nil) }
-				}
 			}
-			.padding(.horizontal, 18 * m.scale)
-			.padding(.bottom, 12 * m.scale)
+			.padding(.horizontal, 16 * m.scale)
+			.padding(.bottom, 16 * m.scale)
 			.background(GeometryReader { geometry in
 				Color.clear.preference(key: ContentHeight.self, value: geometry.size.height)
 			})
@@ -368,10 +443,24 @@ struct SettingsPage: View {
 
 	private func section(_ title: String) -> some View {
 		Text(title)
-			.font(metrics.font(11, .semibold))
+			.font(metrics.font(13, .medium))
 			.foregroundStyle(.secondary)
-			.padding(.top, 16 * metrics.scale)
-			.padding(.bottom, 4 * metrics.scale)
+			.padding(.leading, 4 * metrics.scale)
+			.padding(.top, 14 * metrics.scale)
+			.padding(.bottom, 6 * metrics.scale)
+	}
+
+	/// Rows grouped on a bordered card, like System Settings.
+	private func card<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+		let shape = RoundedRectangle(cornerRadius: 12 * metrics.scale, style: .continuous)
+		return VStack(spacing: 0) { content() }
+			.padding(.horizontal, 14 * metrics.scale)
+			.background(shape.fill(Color.primary.opacity(0.035)))
+			.overlay(shape.strokeBorder(Color.primary.opacity(0.11), lineWidth: 1))
+	}
+
+	private var line: some View {
+		Rectangle().fill(Color.primary.opacity(0.08)).frame(height: 1)
 	}
 
 	private func toggle(_ title: String, _ subtitle: String, _ value: Binding<Bool>) -> some View {
@@ -384,13 +473,13 @@ struct SettingsPage: View {
 		@ViewBuilder control: () -> Control) -> some View {
 		HStack(spacing: 12) {
 			VStack(alignment: .leading, spacing: 2) {
-				Text(title).font(metrics.font(13))
+				Text(title).font(metrics.font(13, .medium))
 				Text(subtitle).font(metrics.font(11)).foregroundStyle(.secondary)
 			}
 			Spacer()
 			control().fixedSize()
 		}
-		.padding(.vertical, 7 * metrics.scale)
+		.padding(.vertical, 9 * metrics.scale)
 	}
 }
 

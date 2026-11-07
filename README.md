@@ -113,8 +113,9 @@ with nothing typed puts the suggestions away; Down brings them back.
     mac/build.sh --install   # replace /Applications/Kigo.app and start it
     cd mac && swift test     # matcher, calculator, links, commands
 
-The panel is Liquid Glass on macOS 26 and later (a blurred material before),
-with rounded corners. It registers itself as a login item once it runs from
+The panel is a rounded, blurred charcoal surface (near white in light mode)
+with a hairline border and a shadow; the gear in the search bar opens
+settings. It registers itself as a login item once it runs from
 /Applications. For layout checks without Screen Recording permission,
 `KIGO_SNAPSHOT=/tmp/k.png KIGO_QUERY=term .build/debug/Kigo` saves the
 panel, and its settings page, as PNGs (it takes keyboard focus while it runs).

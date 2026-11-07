@@ -8,6 +8,8 @@ import SwiftUI
 /// were in keeps its menu bar, like Spotlight.
 final class LauncherPanel: NSPanel {
 	var keyHandler: ((NSEvent) -> Bool)?
+	/// False for test snapshots, so they never take the keyboard.
+	var allowsKey = true
 
 	init() {
 		super.init(contentRect: NSRect(x: 0, y: 0, width: 680, height: 56),
@@ -18,16 +20,15 @@ final class LauncherPanel: NSPanel {
 		collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient, .ignoresCycle]
 		isOpaque = false
 		backgroundColor = .clear
-		// The window's own shadow and rim are rectangular and showed square
-		// corners around the rounded glass; the glass draws its own edge.
-		hasShadow = false
+		// The shadow follows the rounded surface SwiftUI draws (PanelSurface).
+		hasShadow = true
 		hidesOnDeactivate = false
 		isMovable = false
 		becomesKeyOnlyIfNeeded = false
 		animationBehavior = .none
 	}
 
-	override var canBecomeKey: Bool { true }
+	override var canBecomeKey: Bool { allowsKey }
 	override var canBecomeMain: Bool { false }
 
 	override func sendEvent(_ event: NSEvent) {
@@ -40,9 +41,12 @@ final class LauncherController: NSObject, NSWindowDelegate {
 	let model = LauncherModel()
 	private let prefs = Prefs.shared
 	private let panel = LauncherPanel()
-	/// Liquid Glass on macOS 26 and later, a blurred material before.
-	private var material: NSView!
+	/// The blurred backdrop under the panel's surface, masked to its corners.
+	/// (Not Liquid Glass: the window server draws glass, so the window can't
+	/// cast a rounded shadow or show a crisp border around it.)
+	private var material: NSVisualEffectView!
 	private var hostingView: NSView?
+	private var lastRadius: CGFloat = 0
 	private var top: CGFloat = 0
 	private var subscriptions: Set<AnyCancellable> = []
 	var onShortcutChanged: (() -> Void)?
@@ -55,25 +59,19 @@ final class LauncherController: NSObject, NSWindowDelegate {
 		panel.keyHandler = { [weak self] event in self?.handleKey(event) ?? false }
 		let view = LauncherView(model: model, prefs: prefs,
 			onActivate: { [weak self] index in self?.activate(at: index, reveal: false, alternate: false) },
-			onBack: { [weak self] in self?.closeSettings() })
+			onBack: { [weak self] in self?.closeSettings() },
+			onSettings: { [weak self] in self?.openSettings() })
 		let hosting = NSHostingView(rootView: view)
 		hosting.sizingOptions = []
 		hostingView = hosting
-		if #available(macOS 26.0, *) {
-			let glass = NSGlassEffectView()
-			glass.style = .regular
-			glass.contentView = hosting
-			material = glass
-		} else {
-			let effect = NSVisualEffectView()
-			effect.material = .popover
-			effect.blendingMode = .behindWindow
-			effect.state = .active
-			hosting.frame = effect.bounds
-			hosting.autoresizingMask = [.width, .height]
-			effect.addSubview(hosting)
-			material = effect
-		}
+		let effect = NSVisualEffectView()
+		effect.material = .hudWindow
+		effect.blendingMode = .behindWindow
+		effect.state = .active
+		hosting.frame = effect.bounds
+		hosting.autoresizingMask = [.width, .height]
+		effect.addSubview(hosting)
+		material = effect
 		panel.contentView = material
 		applyCorners()
 
@@ -119,6 +117,7 @@ final class LauncherController: NSObject, NSWindowDelegate {
 		} else if settings {
 			openSettings()
 		}
+		panel.allowsKey = !passive
 		if passive {
 			panel.orderFrontRegardless()
 		} else {
@@ -165,9 +164,8 @@ final class LauncherController: NSObject, NSWindowDelegate {
 	/// the SwiftUI content alone leaves square corners.
 	private func applyCorners() {
 		let radius = Metrics(scale: prefs.size.scale).corner
-		if #available(macOS 26.0, *), let glass = material as? NSGlassEffectView {
-			if glass.cornerRadius != radius { glass.cornerRadius = radius }
-		} else if let effect = material as? NSVisualEffectView {
+		if lastRadius != radius, let effect = material {
+			lastRadius = radius
 			let size = NSSize(width: radius * 2 + 1, height: radius * 2 + 1)
 			let mask = NSImage(size: size, flipped: false) { rect in
 				NSColor.black.setFill()
@@ -191,6 +189,8 @@ final class LauncherController: NSObject, NSWindowDelegate {
 			context.duration = animated ? 0.18 : 0
 			context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
 			panel.animator().setFrame(target, display: true)
+		} completionHandler: { [weak self] in
+			self?.panel.invalidateShadow()
 		}
 	}
 
@@ -210,7 +210,7 @@ final class LauncherController: NSObject, NSWindowDelegate {
 		model.focusToken += 1
 	}
 
-	/// Saves the panel as the window server draws it (glass included) as a
+	/// Saves the panel as the window server draws it, shadow included, as a
 	/// PNG, for checking layouts in tests. An app may capture its own windows
 	/// without Screen Recording permission; the call is deprecated, so it's
 	/// looked up at run time.
@@ -218,8 +218,8 @@ final class LauncherController: NSObject, NSWindowDelegate {
 		typealias Capture = @convention(c) (CGRect, UInt32, UInt32, UInt32) -> Unmanaged<CGImage>?
 		guard let symbol = dlsym(UnsafeMutableRawPointer(bitPattern: -2), "CGWindowListCreateImage") else { return }
 		let capture = unsafeBitCast(symbol, to: Capture.self)
-		// kCGWindowListOptionIncludingWindow, kCGWindowImageBoundsIgnoreFraming | BestResolution
-		guard let image = capture(.null, 1 << 3, UInt32(panel.windowNumber), 1 << 0 | 1 << 3)?
+		// kCGWindowListOptionIncludingWindow, kCGWindowImageBestResolution
+		guard let image = capture(.null, 1 << 3, UInt32(panel.windowNumber), 1 << 3)?
 			.takeRetainedValue() else { return }
 		let rep = NSBitmapImageRep(cgImage: image)
 		try? rep.representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: path))
