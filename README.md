@@ -124,6 +124,28 @@ against this copy's Developer ID team before it's swapped in), or from
 `KIGO_SNAPSHOT=/tmp/k.png KIGO_QUERY=term .build/debug/Kigo` saves the
 panel, and its settings page, as PNGs (it takes keyboard focus while it runs).
 
+## Linux
+
+`linux/` holds the Linux version: Python 3 and GTK 3, so the same archive
+runs on any architecture (tested on a Jetson AGX Orin, Ubuntu 22.04, GNOME
+on Xorg). **Alt+Space** opens it, **Alt+,** (or Ctrl+,, or the gear) its
+settings. It finds applications (.desktop files), GNOME Settings panels,
+files by name in your home folder, and commands (Sleep, Lock Screen,
+Restart, Empty Trash, Toggle Dark Mode, folders), plus the calculator,
+links, `> shell` commands and web search. Alt+Enter shows a file in Files,
+Alt+Shift+C copies its path, Alt+1 … Alt+9 open the Nth result.
+
+    tar xzf kigo-<version>-linux.tar.gz && sh kigo-<version>/install.sh
+
+It installs for your user only (`~/.local/share/kigo`, `~/.local/bin/kigo`)
+and needs `python3-gi` and `gir1.2-gtk-3.0`. On GNOME it binds Alt+Space as
+a custom shortcut, moving GNOME's window menu off it (Kigo puts it back if
+you pick another shortcut, and on `kigo --uninstall`). It updates itself
+from these releases once a day, checking each download against the SHA-256
+GitHub publishes for it.
+
+    linux/build.sh --test    # core tests, then linux/dist/kigo-<version>-linux.tar.gz
+
 ## License
 
 MIT, see [LICENSE](LICENSE).
