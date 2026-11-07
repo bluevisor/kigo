@@ -164,7 +164,7 @@ class Launcher(Gtk.Window):
         self.set_skip_taskbar_hint(True)
         self.set_skip_pager_hint(True)
         self.set_type_hint(Gdk.WindowTypeHint.DIALOG)
-        self.set_icon_name("kigo")
+        self.set_icon_name("com.bluevisor.kigo")
         self.get_style_context().add_class("kigo")
         screen = self.get_screen()
         visual = screen.get_rgba_visual()

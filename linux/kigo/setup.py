@@ -111,4 +111,4 @@ def apply_autostart(on):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w") as f:
         f.write("[Desktop Entry]\nType=Application\nName=Kigo\nComment=Launcher (Alt+Space)\n"
-                "Exec=%s --background\nIcon=kigo\nX-GNOME-Autostart-enabled=true\nNoDisplay=true\n" % WRAPPER)
+                "Exec=%s --background\nIcon=com.bluevisor.kigo\nX-GNOME-Autostart-enabled=true\nNoDisplay=true\n" % WRAPPER)

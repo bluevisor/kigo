@@ -36,10 +36,10 @@ COMMANDS = [
     ("downloads", "Downloads", "Folder", "folder", "folder-download", False, "DOWNLOAD"),
     ("trash", "Trash", "Folder", "bin deleted", "user-trash", False, "TRASH"),
     ("new-terminal", "New Terminal Window", "Terminal", "shell console", "utilities-terminal", False, None),
-    ("settings", "Kigo Settings", "Kigo", "preferences options configure setup", "kigo", False, None),
-    ("reindex", "Reload Applications", "Kigo", "refresh rescan reindex", "kigo", False, None),
-    ("update", "Check for Updates", "Kigo", "upgrade update version kigo", "kigo", False, None),
-    ("quit", "Quit Kigo", "Kigo", "exit close", "kigo", False, None),
+    ("settings", "Kigo Settings", "Kigo", "preferences options configure setup", "com.bluevisor.kigo", False, None),
+    ("reindex", "Reload Applications", "Kigo", "refresh rescan reindex", "com.bluevisor.kigo", False, None),
+    ("update", "Check for Updates", "Kigo", "upgrade update version kigo", "com.bluevisor.kigo", False, None),
+    ("quit", "Quit Kigo", "Kigo", "exit close", "com.bluevisor.kigo", False, None),
 ]
 
 _folders = {}
