@@ -5,6 +5,7 @@
 #                               its hotkey filter and login item on launch)
 #   haiku/deploy.sh --no-run    build only
 # HOST defaults to the UTM debug VM's ssh alias.
+# Never ships mac/: its .build cache is gigabytes and once filled the VM disk.
 set -e
 HOST=${HOST:-haiku-dbg}
 cd "$(dirname "$0")/.."
@@ -13,7 +14,8 @@ cd "$(dirname "$0")/.."
 ssh "$HOST" "date -u -s '$(date -u '+%Y-%m-%d %H:%M:%S')'" >/dev/null
 
 COPYFILE_DISABLE=1 tar --no-xattrs --exclude ./build --exclude ./dist --exclude ./.git \
-	--exclude ./.haiku-sdk -czf - . \
+	--exclude ./.haiku-sdk --exclude ./mac --exclude ./linux/dist --exclude ./.codegraph \
+	--exclude ./.remember -czf - . \
 	| ssh "$HOST" 'rm -rf ~/src/kigo/src ~/src/kigo/hotkey && mkdir -p ~/src/kigo && tar xzf - -C ~/src/kigo 2>/dev/null'
 ssh "$HOST" 'cd ~/src/kigo && make -j8 2>&1 | grep -Ev "^(g\+\+|rc|xres|mimeset) " | tail -40; test -x build/Kigo'
 
