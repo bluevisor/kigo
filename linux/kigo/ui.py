@@ -9,6 +9,7 @@ gi.require_version("Gdk", "3.0")
 from gi.repository import Gdk, Gio, GLib, Gtk, Pango  # noqa: E402
 
 from . import VERSION  # noqa: E402
+from .ki_glyph import KI_GLYPH  # noqa: E402
 from .commands import reveal  # noqa: E402
 from .model import build_results, file_result  # noqa: E402
 from .prefs import SHORTCUTS, SIZES, THEMES, WEB_SEARCH  # noqa: E402
@@ -76,6 +77,10 @@ switch:checked { background-color: %(theme)s; border-color: %(theme)s; }
 button.swatch { padding: 0; min-width: %(p20)s; min-height: %(p20)s; border-radius: 999px;
   border: 2px solid transparent; box-shadow: none; background-image: none; }
 button.swatch.chosen { border-color: %(fg)s; }
+.about { padding: %(p12)s 0; }
+.seal { background-color: %(theme_soft)s; border: 1px solid %(theme_edge)s; border-radius: %(p12)s; }
+.about-name { font-size: %(f15)s; font-weight: 600; }
+.about .row-subtitle { font-size: %(f11)s; }
 """ % dict(
         bg="rgba(28,28,30,0.94)" if dark else "rgba(248,248,248,0.95)",
         border="rgba(255,255,255,0.16)" if dark else "rgba(0,0,0,0.16)",
@@ -85,7 +90,7 @@ button.swatch.chosen { border-color: %(fg)s; }
         card="rgba(255,255,255,0.035)" if dark else "rgba(0,0,0,0.03)",
         card_edge="rgba(255,255,255,0.11)" if dark else "rgba(0,0,0,0.10)",
         r=s(16), field=s(56), row=s(40), footer=s(38),
-        f11=s(11), f12=s(12), f13=s(13), f14=s(14), f18=s(18), f21=s(21),
+        f11=s(11), f12=s(12), f13=s(13), f14=s(14), f15=s(15), f18=s(18), f21=s(21),
         p1=s(1), p2=s(2), p4=s(4), p5=s(5), p6=s(6), p8=s(8), p10=s(10), p12=s(12), p14=s(14), p16=s(16),
         p20=s(20), p52=s(52),
     )
@@ -383,8 +388,8 @@ class Launcher(Gtk.Window):
                       self._segmented("shortcut", [n for n, _ in SHORTCUTS])),
             self._switch("Open at login", "Starts Kigo, hidden, when you log in", "autostart"),
             self._switch("Update automatically", "Installs new versions from GitHub once a day", "updates"),
-            self._row("Kigo %s" % VERSION, "Settings: Alt+, or Ctrl+,", buttons),
         ])
+        self._section(content, "About", [self._about(buttons, scale)])
 
         page.pack_start(self._line(), False, False, 0)
         self.settings_footer = Gtk.Box(spacing=round(8 * scale))
@@ -406,6 +411,61 @@ class Launcher(Gtk.Window):
                 card.pack_start(line, False, False, 0)
             card.pack_start(row, False, False, 0)
         parent.pack_start(card, False, False, 0)
+
+    def _about(self, control, scale):
+        """Kigo's mark: 季 (ki, season) in brush calligraphy, the first half
+        of 季語 (kigo, the season word)."""
+        row = Gtk.Box(spacing=round(14 * scale))
+        row.get_style_context().add_class("about")
+        side = round(54 * scale)
+        seal = Gtk.DrawingArea()
+        seal.set_size_request(side, side)
+        seal.get_style_context().add_class("seal")
+        seal.set_valign(Gtk.Align.CENTER)
+        seal.connect("draw", self._draw_seal)
+        row.pack_start(seal, False, False, 0)
+        text = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2)
+        text.set_valign(Gtk.Align.CENTER)
+        title = Gtk.Label(label="Kigo", xalign=0)
+        title.get_style_context().add_class("about-name")
+        text.pack_start(title, False, False, 0)
+        for line, style in (("The season word: the one word that sets the scene", "dim"),
+                            ("Version %s" % VERSION, "faint")):
+            label = Gtk.Label(label=line, xalign=0)
+            label.get_style_context().add_class("row-subtitle")
+            label.get_style_context().add_class(style)
+            text.pack_start(label, False, False, 0)
+        row.pack_start(text, True, True, 0)
+        control.set_valign(Gtk.Align.CENTER)
+        row.pack_end(control, False, False, 0)
+        return row
+
+    def _draw_seal(self, area, cr):
+        width, height = area.get_allocated_width(), area.get_allocated_height()
+        Gtk.render_background(area.get_style_context(), cr, 0, 0, width, height)
+        Gtk.render_frame(area.get_style_context(), cr, 0, 0, width, height)
+        side = min(width, height) * 0.74
+        x0, y0 = (width - side) / 2, (height - side) / 2
+        h = self.prefs.theme_color.lstrip("#")
+        cr.set_source_rgb(*(int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)))
+        g, i = KI_GLYPH, 0
+        point = lambda j: (x0 + g[j] * side, y0 + g[j + 1] * side)  # noqa: E731
+        while i < len(g):
+            op = g[i]
+            if op == 0:
+                cr.move_to(*point(i + 1))
+                i += 3
+            elif op == 1:
+                cr.line_to(*point(i + 1))
+                i += 3
+            elif op == 2:
+                cr.curve_to(*point(i + 1), *point(i + 3), *point(i + 5))
+                i += 7
+            else:
+                cr.close_path()
+                i += 1
+        cr.fill()
+        return True
 
     def _row(self, title, subtitle, control):
         row = Gtk.Box(spacing=12)

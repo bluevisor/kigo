@@ -94,6 +94,18 @@ MakeCommand(const CommandInfo& info)
 }
 
 
+// "sett…settings" or "kigo s…kigo settings": the user wants Kigo's own
+// settings, ahead of the Settings folder and everything else.
+static bool
+AsksForSettings(const char* query)
+{
+	BString q(query);
+	q.Trim().ToLower();
+	return (q.Length() >= 4 && BString("settings").StartsWith(q))
+		|| (q.Length() >= 6 && BString("kigo settings").StartsWith(q));
+}
+
+
 void
 SearchCommands(const char* query, std::vector<Result>& results, bool all)
 {
@@ -114,6 +126,9 @@ SearchCommands(const char* query, std::vector<Result>& results, bool all)
 				score = keywordScore;
 			start = end + 1;
 		}
+		// Above any match plus history.
+		if (strcmp(info.id, "settings") == 0 && AsksForSettings(query))
+			score = 3000;
 		if (score <= 0)
 			continue;
 		Result result = MakeCommand(info);

@@ -51,6 +51,8 @@ calculator), which web search it offers last (DuckDuckGo, Google, Bing or
 none), whether it suggests what you use most, its size, whether it opens at
 login and checks for updates. Up/Down move, Space or Enter changes,
 Left/Right pick a choice. Settings live in `~/config/settings/Kigo/settings`.
+At the bottom, **About** shows Kigo's mark, 季 (*ki*, season, the first half
+of 季語 *kigo*) brushed in your accent color, with the version and Check Now.
 
 ## Install
 
@@ -167,3 +169,7 @@ GitHub publishes for it.
 ## License
 
 MIT, see [LICENSE](LICENSE).
+
+The 季 mark is the glyph from [Yuji Boku](https://fonts.google.com/specimen/Yuji+Boku)
+(SIL Open Font License 1.1), baked into the sources by `tools/mkki.py` so no
+port needs the font installed.

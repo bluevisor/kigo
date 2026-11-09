@@ -70,6 +70,17 @@ def _make(info):
     return result
 
 
+# Above any match plus history: what "settings" scores for Kigo Settings.
+SETTINGS_SCORE = 3000
+
+
+def asks_for_settings(query):
+    """"sett…settings" or "kigo s…kigo settings": the user wants Kigo's own
+    settings, ahead of GNOME Settings and everything else."""
+    q = query.strip().lower()
+    return (len(q) >= 4 and "settings".startswith(q)) or (len(q) >= 6 and "kigo settings".startswith(q))
+
+
 def search_commands(query, all_commands=True):
     results = []
     for info in COMMANDS:
@@ -80,6 +91,8 @@ def search_commands(query, all_commands=True):
             keyword = fuzzy_score(query, word) * 0.75
             if keyword >= 600 and keyword > score:
                 score = keyword
+        if info[0] == "settings" and asks_for_settings(query):
+            score = SETTINGS_SCORE
         if score > 0:
             result = _make(info)
             result.score = score

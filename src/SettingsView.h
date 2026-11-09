@@ -41,6 +41,8 @@ private:
 		kChoice,
 		kButton,
 		kKeys,
+		// Kigo's mark, name and version, with Check Now.
+		kAbout,
 	};
 
 	struct Row {
@@ -75,6 +77,7 @@ private:
 	void _DrawChoices(int32 index, float right, float centerY);
 	BRect _DrawButton(const char* label, float right, float centerY, bool enabled);
 	void _DrawKeys(const char* keys, float right, float centerY);
+	void _DrawAbout(int32 index, BRect rowRect, rgb_color back);
 	rgb_color _Faded(rgb_color color) const;
 
 	SearchWindow*		fSearchWindow;

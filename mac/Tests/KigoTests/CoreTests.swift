@@ -56,6 +56,11 @@ final class CoreTests: XCTestCase {
 		XCTAssertEqual(searchCommands("reboot", all: true).first?.id, "cmd:restart")
 		XCTAssertEqual(searchCommands("sleep", all: false).count, 0)
 		XCTAssertEqual(searchCommands("kigo set", all: false).first?.id, "cmd:settings")
+		// "settings" means Kigo's, over System Settings even with history.
+		for query in ["settings", "Sett", "kigo set"] {
+			XCTAssertEqual(searchCommands(query, all: false).first?.score, settingsScore, query)
+		}
+		XCTAssertFalse(asksForSettings("set"))
 	}
 
 	/// Sections go best match first; ties keep Applications, Commands, Files.

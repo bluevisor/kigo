@@ -91,6 +91,18 @@ class CoreTests(unittest.TestCase):
             history.record("app:Files", "Files")
             self.assertEqual(build_results("fi", prefs, history, apps, [])[0].title, "Files")
 
+    def test_settings_opens_kigo_settings(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            prefs = Prefs(os.path.join(tmp, "settings.json"))
+            history = History(os.path.join(tmp, "history"))
+            apps = Apps(["Settings", "Files"])
+            for _ in range(50):
+                history.record("app:Settings", "Settings")
+            for query in ("settings", "Sett", "kigo set"):
+                top = build_results(query, prefs, history, apps, [])[0]
+                self.assertEqual((top.id, top.section), ("cmd:settings", "Top Hit"), query)
+            self.assertEqual(build_results("set", prefs, history, apps, [])[0].title, "Settings")
+
     def test_section_order(self):
         self.assertEqual(section_order([[428], [380], [1000, 900]]), [2, 0, 1])
         self.assertEqual(section_order([[900], [900], [900]]), [0, 1, 2])

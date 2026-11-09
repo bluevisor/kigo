@@ -433,14 +433,10 @@ struct SettingsPage: View {
 					toggle("Open at login", "Starts Kigo, hidden, when you log in", $prefs.openAtLogin)
 					line
 					toggle("Update automatically", "Installs new versions from GitHub once a day", $prefs.updates)
-					line
-					row("Kigo \(appVersion)", "Settings: ⌥, or ⌘,") {
-						HStack(spacing: 8) {
-							Button("Check for Updates") { Updater.shared.check(manual: true) }
-							Button("Quit Kigo") { NSApp.terminate(nil) }
-						}
-					}
 				}
+
+				section("About")
+				card { about }
 			}
 			.padding(.horizontal, 16 * m.scale)
 			.padding(.bottom, 16 * m.scale)
@@ -459,6 +455,37 @@ struct SettingsPage: View {
 
 	private var appVersion: String {
 		Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "dev"
+	}
+
+	/// Kigo's mark: 季 (ki, season) in brush calligraphy, the first half of
+	/// 季語 (kigo, the season word).
+	private var about: some View {
+		let m = metrics
+		let tint = Color(nsColor: prefs.theme.color)
+		let seal = (54 * m.scale).rounded()
+		return HStack(spacing: 14 * m.scale) {
+			KiShape()
+				.fill(tint)
+				.frame(width: seal * 0.74, height: seal * 0.74)
+				.frame(width: seal, height: seal)
+				.background(RoundedRectangle(cornerRadius: 12 * m.scale, style: .continuous)
+					.fill(tint.opacity(0.13)))
+				.overlay(RoundedRectangle(cornerRadius: 12 * m.scale, style: .continuous)
+					.strokeBorder(tint.opacity(0.35), lineWidth: 1))
+			VStack(alignment: .leading, spacing: 2 * m.scale) {
+				Text("Kigo").font(m.font(15, .semibold))
+				Text("The season word: the one word that sets the scene")
+					.font(m.font(11)).foregroundStyle(.secondary)
+				Text("Version \(appVersion)").font(m.font(11)).foregroundStyle(.tertiary)
+			}
+			Spacer()
+			HStack(spacing: 8) {
+				Button("Check for Updates") { Updater.shared.check(manual: true) }
+				Button("Quit Kigo") { NSApp.terminate(nil) }
+			}
+			.fixedSize()
+		}
+		.padding(.vertical, 12 * m.scale)
 	}
 
 	private func section(_ title: String) -> some View {
