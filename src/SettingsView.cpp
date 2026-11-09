@@ -3,8 +3,10 @@
 #include <algorithm>
 #include <math.h>
 
+#include <Shape.h>
 #include <Window.h>
 
+#include "KiGlyph.h"
 #include "Kigo.h"
 #include "Prefs.h"
 #include "SearchWindow.h"
@@ -80,10 +82,11 @@ SettingsView::_Build()
 	add(kSwitch, "Open at login", "Starts hidden, ready for the hotkey",
 		"autostart");
 	add(kSwitch, "Check for updates daily", "From GitHub releases", "updates");
+
+	header("About");
 	BString version;
-	version.SetToFormat("Kigo %s", KIGO_VERSION);
-	add(kButton, version.String(), "Look for a newer version now",
-		"check_updates");
+	version.SetToFormat("Version %s", KIGO_VERSION);
+	add(kAbout, "Kigo", version.String(), "check_updates");
 }
 
 
@@ -99,7 +102,9 @@ SettingsView::_Layout()
 			if (i > 0)
 				top += roundf(8 * theme.scale);
 			row.height = theme.headerHeight;
-		} else
+		} else if (row.kind == kAbout)
+			row.height = roundf(78 * theme.scale);
+		else
 			row.height = roundf(theme.rowHeight * 1.12f);
 		row.top = top;
 		top += row.height;
@@ -229,6 +234,8 @@ SettingsView::_Activate(int32 index, int32 choice)
 			Prefs::SetChoice(row.key.String(), choice);
 			break;
 		}
+		case kAbout:
+			break;
 		case kButton:
 			if (row.key == "clear_history") {
 				if (fCleared)
@@ -486,6 +493,11 @@ SettingsView::_DrawRow(int32 index)
 		FillRoundRect(rowRect, 6 * theme.scale, 6 * theme.scale);
 	}
 
+	if (row.kind == kAbout) {
+		_DrawAbout(index, rowRect, back);
+		return;
+	}
+
 	BFont font(be_plain_font);
 	font.SetSize(theme.fontSize * 1.08f);
 	BFont small(be_plain_font);
@@ -673,4 +685,91 @@ SettingsView::_DrawKeys(const char* keys, float right, float centerY)
 		DrawString(it->String(), BPoint(cap.left + pad, baseline));
 		right = cap.left - roundf(4 * theme.scale);
 	}
+}
+
+
+// Kigo's mark: 季 (ki, season) in brush calligraphy, the first half of 季語
+// (kigo, the season word), on a seal in the accent color.
+void
+SettingsView::_DrawAbout(int32 index, BRect rowRect, rgb_color back)
+{
+	const Theme& theme = Theme::Get();
+	const Row& row = fRows[index];
+	float left = theme.padding + 4 * theme.scale;
+	float centerY = roundf((rowRect.top + rowRect.bottom) / 2);
+
+	float side = roundf(54 * theme.scale);
+	BRect seal(left, centerY - side / 2, left + side - 1, centerY + side / 2 - 1);
+	float radius = roundf(12 * theme.scale);
+	SetHighColor(_Faded(MixColors(back, theme.accent, 0.13f)));
+	FillRoundRect(seal, radius, radius);
+	SetHighColor(_Faded(MixColors(back, theme.accent, 0.35f)));
+	StrokeRoundRect(seal, radius, radius);
+
+	float glyph = side * 0.74f;
+	float x0 = seal.left + (side - glyph) / 2;
+	float y0 = seal.top + (side - glyph) / 2;
+	auto point = [&](size_t i) {
+		return BPoint(x0 + kKiGlyph[i] * glyph, y0 + kKiGlyph[i + 1] * glyph);
+	};
+	BShape shape;
+	size_t count = sizeof(kKiGlyph) / sizeof(kKiGlyph[0]);
+	for (size_t i = 0; i < count;) {
+		switch ((int)kKiGlyph[i]) {
+			case 0:
+				shape.MoveTo(point(i + 1));
+				i += 3;
+				break;
+			case 1:
+				shape.LineTo(point(i + 1));
+				i += 3;
+				break;
+			case 2:
+			{
+				BPoint controls[3] = { point(i + 1), point(i + 3), point(i + 5) };
+				shape.BezierTo(controls);
+				i += 7;
+				break;
+			}
+			default:
+				shape.Close();
+				i += 1;
+				break;
+		}
+	}
+	SetHighColor(_Faded(theme.accent));
+	SetFillRule(B_NONZERO);
+	// FillShape draws relative to the pen, which the last DrawString moved.
+	MovePenTo(B_ORIGIN);
+	FillShape(&shape);
+
+	// Name, what a kigo is, the version.
+	BFont name(be_bold_font);
+	name.SetSize(roundf(theme.fontSize * 1.2f));
+	BFont small(be_plain_font);
+	small.SetSize(roundf(theme.fontSize * 0.92f));
+	font_height big, little;
+	name.GetHeight(&big);
+	small.GetHeight(&little);
+	float gap = roundf(2 * theme.scale);
+	float line = ceilf(little.ascent + little.descent) + gap;
+	float textHeight = ceilf(big.ascent + big.descent) + gap + 2 * line - gap;
+	float text = seal.right + roundf(14 * theme.scale);
+	float base = roundf(centerY - textHeight / 2 + big.ascent);
+	SetLowColor(back);
+	SetFont(&name);
+	SetHighColor(_Faded(theme.text));
+	DrawString(row.label.String(), BPoint(text, base));
+	base += ceilf(big.descent) + gap + ceilf(little.ascent);
+	SetFont(&small);
+	SetHighColor(_Faded(theme.dimText));
+	DrawString("The season word: the one word that sets the scene",
+		BPoint(text, base));
+	base += line;
+	SetHighColor(_Faded(theme.faintText));
+	DrawString(row.detail.String(), BPoint(text, base));
+
+	float right = Bounds().right - theme.padding - roundf(4 * theme.scale);
+	BRect button = _DrawButton("Check Now", right, centerY, true);
+	fHits.push_back(Hit{button, index, -1});
 }

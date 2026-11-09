@@ -69,6 +69,16 @@ private func makeCommand(_ info: CommandInfo) -> Result {
 	return result
 }
 
+/// Above any match plus history: what "settings" scores for Kigo Settings.
+let settingsScore = 3000.0
+
+/// "sett…settings" or "kigo s…kigo settings": the user wants Kigo's own
+/// settings, ahead of System Settings and everything else.
+func asksForSettings(_ query: String) -> Bool {
+	let q = query.trimmingCharacters(in: .whitespaces).lowercased()
+	return (q.count >= 4 && "settings".hasPrefix(q)) || (q.count >= 6 && "kigo settings".hasPrefix(q))
+}
+
 /// Matching built-in commands, scored; with `all` false, only Kigo Settings
 /// (which must stay findable).
 func searchCommands(_ query: String, all: Bool) -> [Result] {
@@ -79,6 +89,7 @@ func searchCommands(_ query: String, all: Bool) -> [Result] {
 			let keywordScore = fuzzyScore(query, String(word)) * 0.75
 			if keywordScore >= 600 && keywordScore > score { score = keywordScore }
 		}
+		if info.id == "settings" && asksForSettings(query) { score = settingsScore }
 		if score <= 0 { continue }
 		var result = makeCommand(info)
 		result.score = score
