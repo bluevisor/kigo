@@ -3,7 +3,9 @@
 #   mac/build.sh             build mac/dist/Kigo.app
 #   mac/build.sh --install   and replace /Applications/Kigo.app, then start it
 #   mac/build.sh --release   and notarize it into mac/dist/kigo-<version>-macos.zip,
-#                            the asset Kigo's updater downloads (KIGO_NOTARY_PROFILE
+#                            the universal asset Kigo's updater downloads, plus
+#                            kigo-<version>-macos-{arm64,x86_64}.zip, one architecture
+#                            each, for downloading by hand (KIGO_NOTARY_PROFILE
 #                            names the notarytool keychain profile)
 set -e
 cd "$(dirname "$0")"
@@ -73,14 +75,33 @@ if [ "$1" = "--install" ]; then
 	echo "installed /Applications/Kigo.app"
 fi
 
+# Notarizes app $1 into zip $2: submit, staple, then zip again so the
+# download carries the stapled ticket.
+notarize() {
+	rm -f "$2"
+	ditto -c -k --keepParent "$1" "$2"
+	xcrun notarytool submit "$2" --keychain-profile "${KIGO_NOTARY_PROFILE:-terminal-cam-notary}" \
+		--wait > "$2.log" 2>&1 || { cat "$2.log"; return 1; }
+	grep -q "status: Accepted" "$2.log" || { cat "$2.log"; return 1; }
+	xcrun stapler staple "$1" > /dev/null
+	rm -f "$2" "$2.log"
+	ditto -c -k --keepParent "$1" "$2"
+	echo "released $2"
+}
+
 if [ "$1" = "--release" ]; then
-	ZIP=dist/kigo-$VERSION-macos.zip
-	rm -f "$ZIP"
-	ditto -c -k --keepParent "$APP" "$ZIP"
-	xcrun notarytool submit "$ZIP" --keychain-profile "${KIGO_NOTARY_PROFILE:-terminal-cam-notary}" --wait
-	xcrun stapler staple "$APP"
-	# Zip again so the download carries the stapled ticket.
-	rm -f "$ZIP"
-	ditto -c -k --keepParent "$APP" "$ZIP"
-	echo "released $ZIP"
+	# One-architecture copies: the universal binary thinned, then signed again.
+	for arch in arm64 x86_64; do
+		rm -rf "dist/$arch" && mkdir -p "dist/$arch"
+		cp -R "$APP" "dist/$arch/Kigo.app"
+		lipo "$APP/Contents/MacOS/Kigo" -thin $arch -output "dist/$arch/Kigo.app/Contents/MacOS/Kigo"
+		codesign --force --options runtime --timestamp --sign "$IDENTITY" "dist/$arch/Kigo.app"
+	done
+	# The three notarize at once (a few minutes each).
+	notarize "$APP" "dist/kigo-$VERSION-macos.zip" & universal=$!
+	notarize dist/arm64/Kigo.app "dist/kigo-$VERSION-macos-arm64.zip" & arm=$!
+	notarize dist/x86_64/Kigo.app "dist/kigo-$VERSION-macos-x86_64.zip" & intel=$!
+	failed=0
+	for job in $universal $arm $intel; do wait $job || failed=1; done
+	[ $failed = 0 ] || { echo "notarization failed" >&2; exit 1; }
 fi
