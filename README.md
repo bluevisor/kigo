@@ -127,7 +127,8 @@ the Kigo on that machine instead.
 
     mac/build.sh             # mac/dist/Kigo.app, signed with your Developer ID
     mac/build.sh --install   # replace /Applications/Kigo.app and start it
-    mac/build.sh --release   # notarized mac/dist/kigo-<version>-macos.zip
+    mac/build.sh --release   # notarized mac/dist/kigo-<version>-macos.zip (universal),
+                             # plus -macos-arm64.zip and -macos-x86_64.zip
     cd mac && swift test     # matcher, calculator, links, commands
 
 The panel is a rounded, blurred charcoal surface (near white in light mode)
@@ -165,6 +166,7 @@ from these releases once a day, checking each download against the SHA-256
 GitHub publishes for it.
 
     linux/build.sh --test    # core tests, then linux/dist/kigo-<version>-linux.tar.gz
+                             # (any arch), plus -linux-arm64 and -linux-amd64 copies
 
 ## License
 
