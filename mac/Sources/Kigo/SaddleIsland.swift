@@ -137,6 +137,12 @@ final class SaddleIslandLink {
 		case .calculator: row.iconPath = appPath("com.apple.calculator")
 		case .shell: row.iconPath = appPath("com.apple.Terminal")
 		case .url, .web: row.browser = true
+		case .meeting:
+			if let app = URL(string: result.payload).flatMap(MeetingService.of)?.appURL {
+				row.iconPath = app.path
+			} else {
+				row.browser = true
+			}
 		case .command: break
 		}
 		if row.iconPath == nil, row.browser == nil {

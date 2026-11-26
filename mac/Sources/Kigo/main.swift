@@ -20,6 +20,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 		updateHotKey()
 		if ProcessInfo.processInfo.environment["KIGO_SNAPSHOT"] == nil {
 			saddleIsland = SaddleIslandLink(controller: controller)
+			if Prefs.shared.meetings { controller.model.meetings.requestAccess() }
 		}
 		NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didActivateApplicationNotification,
 			object: nil, queue: .main) { [weak self] _ in self?.updateHotKey() }
@@ -40,11 +41,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
 	// KIGO_SNAPSHOT=out.png [KIGO_QUERY=text] shows the launcher, types the
 	// query and saves what the panel shows (out.png, out-settings.png), without
-	// taking the keyboard.
+	// taking the keyboard. KIGO_MEETING="title|link|minutes from now" stands in
+	// for Calendar.
 	private func snapshotForTests() {
 		let env = ProcessInfo.processInfo.environment
 		guard let path = env["KIGO_SNAPSHOT"] else { return }
 		controller.passive = true
+		if let fake = env["KIGO_MEETING"]?.split(separator: "|", omittingEmptySubsequences: false), fake.count == 3,
+			let link = URL(string: String(fake[1])), let service = MeetingService.of(link),
+			let minutes = Double(fake[2]) {
+			let start = Date().addingTimeInterval(minutes * 60)
+			controller.model.meetings.fixed = [Meeting(id: "snapshot", title: String(fake[0]), start: start,
+				end: start.addingTimeInterval(1800), service: service, link: link)]
+		}
 		controller.show()
 		controller.model.query = env["KIGO_QUERY"] ?? ""
 		DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {

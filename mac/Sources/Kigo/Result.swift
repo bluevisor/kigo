@@ -2,7 +2,7 @@
 import AppKit
 
 enum ResultKind {
-	case app, preference, file, folder, command, calculator, url, web, shell
+	case app, preference, file, folder, command, calculator, url, web, shell, meeting
 
 	var label: String {
 		switch self {
@@ -15,6 +15,7 @@ enum ResultKind {
 		case .url: return "Link"
 		case .web: return "Web Search"
 		case .shell: return "Terminal"
+		case .meeting: return "Meeting"
 		}
 	}
 }
@@ -26,7 +27,7 @@ struct Result: Identifiable {
 	/// Stable key for history/frecency: "app:/path", "file:/path", "cmd:sleep".
 	var id: String
 	var section = ""
-	/// Command id, calculator value, URL, settings pane id or shell command line.
+	/// Command id, calculator value, URL, settings pane id, shell command line or meeting link.
 	var payload = ""
 	var path: String?
 	var needsConfirm = false
@@ -48,6 +49,7 @@ struct Result: Identifiable {
 		case .url: return "Open Link"
 		case .web: return "Search"
 		case .shell: return "Run in Terminal"
+		case .meeting: return "Join Meeting"
 		}
 	}
 }

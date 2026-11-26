@@ -365,6 +365,7 @@ struct SettingsPage: View {
 	let model: LauncherModel
 	let metrics: Metrics
 	@State private var cleared = false
+	@State private var calendarDenied = Meetings.denied
 
 	var body: some View {
 		let m = metrics
@@ -389,7 +390,16 @@ struct SettingsPage: View {
 
 				section("Suggestions")
 				card {
-					toggle("Suggest what you use most", "Shown before you type anything", $prefs.suggestions)
+					toggle("Suggest what you use most", "Before you type: what you open at this hour, on this network",
+						$prefs.suggestions)
+					line
+					toggle("Suggest your next meeting", calendarDenied
+						? "Allow Kigo in System Settings \u{203A} Privacy & Security \u{203A} Calendars"
+						: "Join a Calendar video call from 15 minutes before it starts", $prefs.meetings)
+					.onChange(of: prefs.meetings) { _, on in
+						guard on else { return }
+						model.meetings.requestAccess { calendarDenied = Meetings.denied }
+					}
 					line
 					row("Search history", cleared ? "Cleared" : "Forget what you opened; ranking starts over") {
 						Button("Clear") {

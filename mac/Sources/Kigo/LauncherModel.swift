@@ -23,6 +23,7 @@ final class LauncherModel: ObservableObject {
 
 	let apps = AppIndex()
 	let history = History()
+	let meetings = Meetings()
 	private let files = FileSearch()
 	private var fileResults: [Result] = []
 	private let prefs = Prefs.shared
@@ -35,6 +36,7 @@ final class LauncherModel: ObservableObject {
 			self.fileResults = results
 			self.update(keepSelection: true)
 		}
+		meetings.onChange = { [weak self] in self?.update(keepSelection: true) }
 		NotificationCenter.default.addObserver(forName: .kigoReindex, object: nil, queue: .main) { [weak self] _ in
 			self?.apps.rebuild { self?.update(keepSelection: true) }
 		}
@@ -45,6 +47,7 @@ final class LauncherModel: ObservableObject {
 	/// Called each time the launcher opens.
 	func prepare() {
 		apps.refreshIfNeeded { [weak self] in self?.update(keepSelection: true) }
+		if prefs.meetings { meetings.refresh() }
 		update(keepSelection: false)
 	}
 
@@ -150,6 +153,14 @@ final class LauncherModel: ObservableObject {
 
 	private func suggestions() -> [Result] {
 		var list: [Result] = []
+		if prefs.meetings {
+			let now = Date()
+			for meeting in meetings.due(at: now).prefix(2) {
+				var result = meeting.result(at: now)
+				result.section = "Up Next"
+				list.append(result)
+			}
+		}
 		for id in history.top(8) {
 			var result: Result?
 			if id.hasPrefix("app:") || id.hasPrefix("pref:") {
@@ -224,7 +235,7 @@ final class LauncherModel: ObservableObject {
 
 	/// Tab completes the selected title, like a shell.
 	func complete() {
-		guard let result = selected, ![.calculator, .web, .shell, .url].contains(result.kind) else { return }
+		guard let result = selected, ![.calculator, .web, .shell, .url, .meeting].contains(result.kind) else { return }
 		query = result.title
 		focusToken += 1
 	}
