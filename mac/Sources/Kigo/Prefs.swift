@@ -66,6 +66,8 @@ final class Prefs: ObservableObject {
 	@Published var searchCommands: Bool { didSet { defaults.set(searchCommands, forKey: "searchCommands") } }
 	@Published var calculator: Bool { didSet { defaults.set(calculator, forKey: "calculator") } }
 	@Published var suggestions: Bool { didSet { defaults.set(suggestions, forKey: "suggestions") } }
+	/// Lead the suggestions with a video call about to start (Meetings.swift).
+	@Published var meetings: Bool { didSet { defaults.set(meetings, forKey: "meetings") } }
 	@Published var webSearch: WebSearch { didSet { defaults.set(webSearch.rawValue, forKey: "webSearch") } }
 	@Published var size: Size { didSet { defaults.set(size.rawValue, forKey: "size") } }
 	@Published var shortcut: Shortcut { didSet { defaults.set(shortcut.rawValue, forKey: "shortcut") } }
@@ -86,7 +88,7 @@ final class Prefs: ObservableObject {
 	private init() {
 		defaults.register(defaults: [
 			"searchApps": true, "searchFiles": true, "searchCommands": true,
-			"calculator": true, "suggestions": true, "openAtLogin": true,
+			"calculator": true, "suggestions": true, "meetings": true, "openAtLogin": true,
 			"webSearch": WebSearch.duckDuckGo.rawValue, "size": Size.standard.rawValue,
 			"shortcut": Shortcut.option.rawValue, "theme": ThemeColor.ginkgo.rawValue, "updates": true,
 			"islandSearch": true,
@@ -96,6 +98,7 @@ final class Prefs: ObservableObject {
 		searchCommands = defaults.bool(forKey: "searchCommands")
 		calculator = defaults.bool(forKey: "calculator")
 		suggestions = defaults.bool(forKey: "suggestions")
+		meetings = defaults.bool(forKey: "meetings")
 		openAtLogin = defaults.bool(forKey: "openAtLogin")
 		webSearch = WebSearch(rawValue: defaults.integer(forKey: "webSearch")) ?? .duckDuckGo
 		size = Size(rawValue: defaults.integer(forKey: "size")) ?? .standard

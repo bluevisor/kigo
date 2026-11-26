@@ -50,6 +50,8 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 	<key>LSMinimumSystemVersion</key><string>14.0</string>
 	<key>LSUIElement</key><true/>
 	<key>LSApplicationCategoryType</key><string>public.app-category.productivity</string>
+	<key>NSCalendarsFullAccessUsageDescription</key><string>Kigo suggests the meeting that's about to start, so Option+Space at 1:59 joins your 2:00 Zoom call. It only reads events and never leaves your Mac.</string>
+	<key>NSCalendarsUsageDescription</key><string>Kigo suggests the meeting that's about to start, so Option+Space at 1:59 joins your 2:00 Zoom call. It only reads events and never leaves your Mac.</string>
 	<key>NSAppleEventsUsageDescription</key><string>Kigo runs shell commands in Terminal and asks Finder and System Events to empty the Trash, restart, shut down, log out or switch dark mode when you pick those commands.</string>
 	<key>NSHumanReadableCopyright</key><string>© 2026 John Zheng</string>
 </dict>
@@ -61,9 +63,9 @@ IDENTITY=${KIGO_SIGN_IDENTITY:-$(security find-identity -v -p codesigning | sed 
 TIMESTAMP=--timestamp=none
 [ "$1" = "--release" ] && TIMESTAMP=--timestamp
 if [ -n "$IDENTITY" ]; then
-	codesign --force --options runtime $TIMESTAMP --sign "$IDENTITY" "$APP"
+	codesign --force --options runtime --entitlements Kigo.entitlements $TIMESTAMP --sign "$IDENTITY" "$APP"
 else
-	codesign --force --sign - "$APP"
+	codesign --force --entitlements Kigo.entitlements --sign - "$APP"
 fi
 echo "built $APP ($VERSION, signed by ${IDENTITY:-ad hoc})"
 
@@ -95,7 +97,8 @@ if [ "$1" = "--release" ]; then
 		rm -rf "dist/$arch" && mkdir -p "dist/$arch"
 		cp -R "$APP" "dist/$arch/Kigo.app"
 		lipo "$APP/Contents/MacOS/Kigo" -thin $arch -output "dist/$arch/Kigo.app/Contents/MacOS/Kigo"
-		codesign --force --options runtime --timestamp --sign "$IDENTITY" "dist/$arch/Kigo.app"
+		codesign --force --options runtime --entitlements Kigo.entitlements --timestamp --sign "$IDENTITY" \
+			"dist/$arch/Kigo.app"
 	done
 	# The three notarize at once (a few minutes each).
 	notarize "$APP" "dist/kigo-$VERSION-macos.zip" & universal=$!

@@ -142,6 +142,9 @@ enum Actions {
 			return NSWorkspace.shared.open(URL(fileURLWithPath: path))
 		case .url, .web:
 			return openURL(result.payload)
+		case .meeting:
+			guard let url = URL(string: result.payload) else { return false }
+			return MeetingService.join(url)
 		case .calculator:
 			copy(result.payload)
 			return true
@@ -162,7 +165,7 @@ enum Actions {
 	static func copyText(_ result: Result) -> String? {
 		if let path = result.path { return path }
 		switch result.kind {
-		case .calculator, .url, .web, .shell: return result.payload
+		case .calculator, .url, .web, .shell, .meeting: return result.payload
 		default: return nil
 		}
 	}

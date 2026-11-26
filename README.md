@@ -118,6 +118,15 @@ socket; when Kigo isn't running, Saddle Island searches by itself. Turn off
 Kigo's Settings › General › Search in Saddle Island to have both keys open
 Kigo's own panel instead. Without Saddle Island, Option+Space opens Kigo's panel.
 
+On the Mac, suggestions follow the moment. What you open at this hour (on
+this kind of day: weekday or weekend) and on this network (Kigo keeps a hash
+of the router macOS reports, so it needs no Location access) ranks first, so
+the 9 AM apps lead at 9 AM, and the office apps at the office. From 15 minutes
+before a Calendar event with a Zoom, Google Meet, Teams, Webex or FaceTime
+link until 10 minutes in, **Up Next** leads with it, and Enter joins the call
+in its app: open Kigo at 1:59 for a 2:00 Zoom call and Enter puts you in it.
+Kigo asks for Calendar access once; Settings › Suggestions turns either off.
+
 On the Mac, Cmd+Enter (or Option+Enter) shows the result in Finder,
 Cmd+Shift+C copies its path, Cmd+1 … Cmd+9 open the Nth result. Backspace
 with nothing typed puts the suggestions away; Down brings them back. While
@@ -129,7 +138,7 @@ the Kigo on that machine instead.
     mac/build.sh --install   # replace /Applications/Kigo.app and start it
     mac/build.sh --release   # notarized mac/dist/kigo-<version>-macos.zip (universal),
                              # plus -macos-arm64.zip and -macos-x86_64.zip
-    cd mac && swift test     # matcher, calculator, links, commands
+    cd mac && swift test     # matcher, calculator, links, commands, suggestions
 
 The panel is a rounded, blurred charcoal surface (near white in light mode)
 with a hairline border and a shadow; the gear in the search bar opens
